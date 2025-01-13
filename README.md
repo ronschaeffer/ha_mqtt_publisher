@@ -48,6 +48,11 @@ mqtt:
   topics:
     next: "your_topic/next"
     all_upcoming: "your_topic/all_upcoming"
+  last_will:
+    topic: "your_last_will_topic"
+    payload: "your_last_will_payload"
+    qos: 1
+    retain: true
 ```
 
 ## Usage
