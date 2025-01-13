@@ -1,17 +1,32 @@
 # MQTT Configuration
 mqtt:
   broker_url: "your_broker_url"
-  broker_port: 8883
+  broker_port:
+    8883 # Standard MQTT ports:
+    # 1883 : MQTT (unencrypted)
+    # 8883 : MQTT over TLS/SSL
+    # 8884 : MQTT over TLS/SSL (client certificate)
   client_id: "your_client_id"
+
+  # Connection security: choose one of:
+  # - 'none': No security (typically port 1883)
+  # - 'username': Username/password only (typically port 1883)
+  # - 'tls': TLS without client authentication (typically port 8883)
+  # - 'tls_with_client_cert': TLS with client certificate (typically port 8884)
   security: "username"
+
+  # Authentication settings
   auth:
     username: "your_username"
     password: "your_password"
+
+  # TLS settings
   tls:
-    ca_cert: null
-    client_cert: null
-    client_key: null
-    verify: false
+    ca_cert: null # Path to CA certificate
+    client_cert: null # Path to client certificate (if needed)
+    client_key: null # Path to client key (if needed)
+    verify: false # Verify broker's certificate
+
   topics:
     next: "your_topic/next"
     all_upcoming: "your_topic/all_upcoming"
