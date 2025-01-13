@@ -1,0 +1,22 @@
+# MQTT Configuration
+mqtt:
+  broker_url: "your_broker_url"
+  broker_port: 8883
+  client_id: "your_client_id"
+  security: "username"
+  auth:
+    username: "your_username"
+    password: "your_password"
+  tls:
+    ca_cert: null
+    client_cert: null
+    client_key: null
+    verify: false
+  topics:
+    next: "your_topic/next"
+    all_upcoming: "your_topic/all_upcoming"
+  last_will:
+    topic: "your_last_will_topic"
+    payload: "your_last_will_payload"
+    qos: 1
+    retain: true
