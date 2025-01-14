@@ -1,0 +1,5 @@
+[flake8]
+exclude = .venv
+extend-ignore = E203, W503
+import-order-style = google
+application-import-names = mqtt_publisher

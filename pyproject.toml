@@ -1,27 +1,31 @@
-[project]
+[tool.poetry]
 name = "mqtt-publisher"
 version = "0.1.0"
-description = "Generic MQTT publisher package"
-authors = [
-    {name = "ronschaeffer", email = "ron@ronschaeffer.com"}
-]
-license = {text = "GPL"}
+description = "An MQTT publisher package"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
 readme = "README.md"
-requires-python = "^3.11"
-dependencies = [
-    "paho-mqtt>=1.6.1",
-    "typing-extensions"
-]
+homepage = "https://github.com/ronschaeffer/mqtt_publisher"
+repository = "https://github.com/ronschaeffer/mqtt_publisher"
+keywords = ["mqtt", "publisher", "iot"]
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.poetry.dependencies]
+python = ">=3.8.1"
+paho-mqtt = "^1.6.1"
+pyyaml = "^6.0"  # For YAML configuration file parsing
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
+pytest-mock = "^3.10.0"
+flake8 = "^6.0.0"  # For code linting
+black = "^23.0.0"  # For code formatting
+mypy = "^1.0.0"  # For type checking
+types-PyYAML = "^6.0.12"  # Type stubs for PyYAML
+types-paho-mqtt = "^1.6"  # Type stubs for paho-mqtt
+isort = "^5.10.1"  # For import sorting
+codespell = "^2.1.0"  # For spell checking
+pre-commit = "^2.15.0"
 
-[tool.poetry]
-packages = [
-    { include = "mqtt_publisher" }
-]
-
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

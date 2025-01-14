@@ -130,4 +130,4 @@ poetry run pytest
 
 ## License
 
-This project is licensed under the GPL License.
+This project is licensed under the MIT License.
