@@ -45,7 +45,7 @@ class MQTTPublisher:
         # Configure Last Will and Testament
         if last_will:
             self.client.will_set(last_will['topic'], last_will['payload'], 
-                                 last_will['qos'], last_will['retain'])
+                                 qos=last_will['qos'], retain=last_will['retain'])
 
         # Configure security based on type
         if security in ['username', 'tls_with_client_cert']:
@@ -139,7 +139,7 @@ class MQTTPublisher:
         try:
             if isinstance(payload, (dict, list)):
                 payload = json.dumps(payload)
-            result = self.client.publish(topic, payload, qos, retain)
+            result = self.client.publish(topic, payload, qos=qos, retain=retain)  # Use keyword args here!
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 logging.info(f"Published message to topic '{topic}'")
                 return True
