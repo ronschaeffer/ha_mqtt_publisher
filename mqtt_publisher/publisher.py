@@ -1,41 +1,43 @@
-import ssl
 import json
-import time
 import logging
-from typing import Any, Optional, Dict
+import ssl
+import time
+from typing import Any, Dict, Optional
+
 import paho.mqtt.client as mqtt
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 
 class MQTTPublisher:
-    """
-    An MQTT publisher class for sending messages to an MQTT broker.
+    """An MQTT publisher class for sending messages to an MQTT broker.
 
     Args:
-        broker_url (str): The URL of the MQTT broker.
-        broker_port (int): The port of the MQTT broker.
-        client_id (str): The unique ID of the MQTT client.
-        security (str, optional): The security mechanism to use. 
-                                  Options are 'none', 'username', 'tls', or 'tls_with_client_cert'. 
-                                  Defaults to 'none'.
-        auth (Optional[Dict], optional): A dictionary containing authentication credentials 
-                                         (username and password). Required for 'username' and 
-                                         'tls_with_client_cert' security. Defaults to None.
-        tls (Optional[Dict], optional): A dictionary containing TLS configuration (ca_cert, client_cert, 
-                                        client_key, verify). Required for 'tls' and 
-                                        'tls_with_client_cert' security. Defaults to None.
-        max_retries (int, optional): The maximum number of connection retries. Defaults to 3.
-        last_will (Optional[Dict], optional): A dictionary containing Last Will and Testament (LWT) settings 
-                                              (topic, payload, qos, retain). Defaults to None.
+        broker_url: URL of the MQTT broker
+        broker_port: Port number for the broker
+        client_id: Unique client identifier
+        security: Security mechanism to use
+            Options: 'none', 'username', 'tls', 'tls_with_client_cert'
+        auth: Authentication credentials
+        tls: TLS configuration settings
+        max_retries: Maximum connection attempts
+        last_will: Last Will and Testament settings
     """
 
-    def __init__(self, broker_url: str, broker_port: int, client_id: str,
-                 security: str = 'none', auth: Optional[Dict] = None, 
-                 tls: Optional[Dict] = None, max_retries: int = 3,
-                 last_will: Optional[Dict] = None):
-
+    def __init__(
+        self,
+        broker_url: str,
+        broker_port: int,
+        client_id: str,
+        security: str = "none",
+        auth: Optional[Dict] = None,
+        tls: Optional[Dict] = None,
+        max_retries: int = 3,
+        last_will: Optional[Dict] = None,
+    ):
         self.client = mqtt.Client(client_id=client_id)
         self.broker_url = broker_url
         self.broker_port = broker_port
@@ -44,28 +46,34 @@ class MQTTPublisher:
 
         # Configure Last Will and Testament
         if last_will:
-            self.client.will_set(last_will['topic'], last_will['payload'], 
-                                 qos=last_will['qos'], retain=last_will['retain'])
+            self.client.will_set(
+                last_will["topic"],
+                last_will["payload"],
+                qos=last_will["qos"],
+                retain=last_will["retain"],
+            )
 
         # Configure security based on type
-        if security in ['username', 'tls_with_client_cert']:
-            if not auth or not auth.get('username') or not auth.get('password'):
-                raise ValueError("Username/password required but not provided")
-            self.client.username_pw_set(auth['username'], auth['password'])
+        if security in ["username", "tls_with_client_cert"]:
+            auth = auth or {}
+            user = auth.get("username")
+            pwd = auth.get("password")
+            if not (user and pwd):
+                raise ValueError("Username & password required")
+            self.client.username_pw_set(user, pwd)
 
-        if security in ['tls', 'tls_with_client_cert']:
-            try:
+        if security in ["tls", "tls_with_client_cert"]:
+            if tls:
                 self.client.tls_set(
-                    ca_certs=tls.get('ca_cert'),
-                    certfile=tls.get('client_cert'),
-                    keyfile=tls.get('client_key'),
-                    cert_reqs=ssl.CERT_REQUIRED if tls.get('verify') else ssl.CERT_NONE,
-                    tls_version=ssl.PROTOCOL_TLS
+                    ca_certs=tls.get("ca_cert"),
+                    certfile=tls.get("client_cert"),
+                    keyfile=tls.get("client_key"),
+                    cert_reqs=ssl.CERT_REQUIRED if tls.get("verify") else ssl.CERT_NONE,
+                    tls_version=ssl.PROTOCOL_TLS,
                 )
-                self.client.tls_insecure_set(not tls.get('verify', True))
-            except Exception as e:
-                logging.error(f"TLS setup failed: {e}", exc_info=True)  # Log traceback
-                raise
+                self.client.tls_insecure_set(not tls.get("verify", True))
+            else:
+                raise ValueError("TLS configuration required but not provided")
 
         # Set up callbacks
         self.client.on_connect = self._on_connect
@@ -92,7 +100,9 @@ class MQTTPublisher:
         retries = 0
         while retries < self.max_retries:
             try:
-                logging.info(f"Attempting connection to {self.broker_url}:{self.broker_port}")
+                logging.info(
+                    "Attempting connection to " f"{self.broker_url}:{self.broker_port}"
+                )
                 self.client.connect(self.broker_url, self.broker_port, keepalive=60)
                 self.client.loop_start()
                 # Wait for connection
@@ -104,7 +114,10 @@ class MQTTPublisher:
                     return True
                 logging.warning("Connection timeout")
             except Exception as e:
-                logging.error(f"Connection attempt {retries + 1} failed: {e}", exc_info=True)
+                logging.error(
+                    f"Connection attempt {retries + 1} failed: {e}",
+                    exc_info=True,
+                )
                 retries += 1
                 if retries < self.max_retries:
                     time.sleep(2)  # Wait before retry
@@ -118,19 +131,19 @@ class MQTTPublisher:
             self._connected = False
             logging.info("Disconnected from MQTT broker")
 
-    def publish(self, topic: str, payload: Any, qos: int = 0,
-                retain: bool = False) -> bool:
-        """
-        Publish a payload to a topic.
+    def publish(
+        self, topic: str, payload: Any, qos: int = 0, retain: bool = False
+    ) -> bool:
+        """Publish a payload to a topic.
 
         Args:
-            topic (str): The MQTT topic to publish to.
-            payload (Any): The payload to publish. Can be a string, dictionary, or list.
-            qos (int, optional): The quality of service level (0, 1, or 2). Defaults to 0.
-            retain (bool, optional): Whether the message should be retained by the broker. Defaults to False.
+            topic: The MQTT topic
+            payload: The message payload
+            qos: Quality of service (0-2)
+            retain: Whether to retain the message
 
         Returns:
-            bool: True if the publication was successful, False otherwise.
+            bool: Success status
         """
         if not self._connected:
             logging.error("Not connected to broker")
@@ -139,7 +152,9 @@ class MQTTPublisher:
         try:
             if isinstance(payload, (dict, list)):
                 payload = json.dumps(payload)
-            result = self.client.publish(topic, payload, qos=qos, retain=retain)  # Use keyword args here!
+            result = self.client.publish(
+                topic, payload, qos=qos, retain=retain
+            )  # Use keyword args here!
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 logging.info(f"Published message to topic '{topic}'")
                 return True

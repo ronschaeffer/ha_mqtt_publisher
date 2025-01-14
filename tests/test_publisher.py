@@ -1,18 +1,20 @@
 import logging
-from unittest.mock import patch, MagicMock
 import ssl
+from unittest.mock import MagicMock, patch
+
+import paho.mqtt.client as mqtt
+
 from mqtt_publisher.publisher import MQTTPublisher
-import paho.mqtt.client as mqtt  # Import the mqtt module
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 
 
-@patch('paho.mqtt.client.Client')
+@patch("paho.mqtt.client.Client")
 def test_mqtt_publisher_connection(mock_client):
     logging.debug("Starting test_mqtt_publisher_connection")
 
-    # Mock the connect and loop_start methods to simulate a successful connection
+    # Mock connect and loop_start methods to simulate a successful connection
     mock_client.return_value.connect.return_value = 0
     mock_client.return_value.loop_start = MagicMock()
     mock_client.return_value.loop_stop = MagicMock()
@@ -21,7 +23,7 @@ def test_mqtt_publisher_connection(mock_client):
     publisher = MQTTPublisher(
         broker_url="test.broker.com",
         broker_port=1883,
-        client_id="test_client"
+        client_id="test_client",
     )
 
     # Simulate successful connection (important for this test)
@@ -43,7 +45,7 @@ def test_mqtt_publisher_connection(mock_client):
     logging.debug("Finished test_mqtt_publisher_connection")
 
 
-@patch('paho.mqtt.client.Client')
+@patch("paho.mqtt.client.Client")
 def test_mqtt_publisher_publish(mock_client):
     logging.debug("Starting test_mqtt_publisher_publish")
 
@@ -55,7 +57,7 @@ def test_mqtt_publisher_publish(mock_client):
     publisher = MQTTPublisher(
         broker_url="test.broker.com",
         broker_port=1883,
-        client_id="test_client"
+        client_id="test_client",
     )
 
     # Simulate successful connection (important for this test)
@@ -65,13 +67,16 @@ def test_mqtt_publisher_publish(mock_client):
     logging.debug("Calling publish")
     assert publisher.publish("test/topic", {"message": "Hello, MQTT!"}) is True
     mock_client.return_value.publish.assert_called_once_with(
-        "test/topic", '{"message": "Hello, MQTT!"}', qos=0, retain=False  # Fixed assertion
+        "test/topic",
+        '{"message": "Hello, MQTT!"}',
+        qos=0,
+        retain=False,  # Fixed assertion
     )
 
     logging.debug("Finished test_mqtt_publisher_publish")
 
 
-@patch('paho.mqtt.client.Client')
+@patch("paho.mqtt.client.Client")
 def test_mqtt_publisher_tls(mock_client):
     logging.debug("Starting test_mqtt_publisher_tls")
 
@@ -87,15 +92,15 @@ def test_mqtt_publisher_tls(mock_client):
         "ca_cert": "path/to/ca_cert",
         "client_cert": "path/to/client_cert",
         "client_key": "path/to/client_key",
-        "verify": True
+        "verify": True,
     }
 
     publisher = MQTTPublisher(
         broker_url="test.broker.com",
         broker_port=8883,  # Use a typical port for TLS
         client_id="test_client",
-        security="tls", 
-        tls=tls_config
+        security="tls",
+        tls=tls_config,
     )
 
     # Simulate successful connection (important for this test)
@@ -108,13 +113,13 @@ def test_mqtt_publisher_tls(mock_client):
         logging.error(f"An error occurred during connect(): {e}")
         raise  # Re-raise the exception to fail the test
 
-    # Assert that tls_set and tls_insecure_set were called with the correct parameters
+    # Assert that tls_set, tls_insecure_set were called with correct parameters
     mock_client.return_value.tls_set.assert_called_once_with(
         ca_certs="path/to/ca_cert",
         certfile="path/to/client_cert",
         keyfile="path/to/client_key",
         cert_reqs=ssl.CERT_REQUIRED,
-        tls_version=ssl.PROTOCOL_TLS
+        tls_version=ssl.PROTOCOL_TLS,
     )
     mock_client.return_value.tls_insecure_set.assert_called_once_with(False)
 
@@ -123,14 +128,15 @@ def test_mqtt_publisher_tls(mock_client):
 
     logging.debug("Finished test_mqtt_publisher_tls")
 
+
 # ... (other test functions) ...
 
 
-@patch('paho.mqtt.client.Client')
+@patch("paho.mqtt.client.Client")
 def test_mqtt_publisher_last_will(mock_client):
     logging.debug("Starting test_mqtt_publisher_last_will")
 
-    # Mock the connect, will_set, loop_start, loop_stop, and disconnect methods
+    # Mock connect, will_set, loop_start, loop_stop, and disconnect methods
     mock_client.return_value.connect.return_value = 0
     mock_client.return_value.will_set = MagicMock()
     mock_client.return_value.loop_start = MagicMock()
@@ -141,14 +147,14 @@ def test_mqtt_publisher_last_will(mock_client):
         "topic": "last/will/topic",
         "payload": "Last will message",
         "qos": 1,
-        "retain": True
+        "retain": True,
     }
 
     publisher = MQTTPublisher(
         broker_url="test.broker.com",
         broker_port=1883,
         client_id="test_client",
-        last_will=last_will_config  # Pass the last will config
+        last_will=last_will_config,  # Pass the last will config
     )
 
     # Simulate successful connection (important for this test)
@@ -171,4 +177,16 @@ def test_mqtt_publisher_last_will(mock_client):
 
     logging.debug("Finished test_mqtt_publisher_last_will")
 
-# Add more tests for other methods and scenarios...
+
+@patch("paho.mqtt.client.Client")
+def test_mqtt_publisher_basic_init(mock_client):
+    """Test basic initialization of MQTTPublisher."""
+    publisher = MQTTPublisher(
+        broker_url="test.broker.com",
+        broker_port=1883,
+        client_id="test_client",
+    )
+
+    assert publisher.broker_url == "test.broker.com"
+    assert publisher.broker_port == 1883
+    assert publisher._connected is False
