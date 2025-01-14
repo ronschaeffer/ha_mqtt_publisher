@@ -1,0 +1,21 @@
+from ha_mqtt_discovery.discovery import HomeAssistantMQTTDiscovery
+
+config = {
+    "broker_url": "your_broker_url",
+    "broker_port": 8883,
+    "client_id": "your_client_id",
+    "security": "username",
+    "auth": {
+        "username": "your_username",
+        "password": "your_password"
+    },
+    "tls": {
+        "ca_cert": "path/to/ca_cert",
+        "client_cert": "path/to/client_cert",
+        "client_key": "path/to/client_key",
+        "verify": True
+    }
+}
+
+discovery = HomeAssistantMQTTDiscovery(config)
+discovery.publish_discovery_message("homeassistant/sensor/my_sensor/config", {"name": "My Sensor", "state_topic": "homeassistant/sensor/my_sensor/state"})
