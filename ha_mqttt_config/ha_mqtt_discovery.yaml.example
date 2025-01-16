@@ -1,0 +1,66 @@
+# For more details, refer to the Home Assistant MQTT integration documentation:
+# https://www.home-assistant.io/integrations/mqtt/
+#
+# Note: While the three main sections (device, origin, and components) and some
+# configuration options (such as identifiers, name, state_topic) are required,
+# others are optional. Additional sections and configuration options can be added
+# or deleted as needed. Refer to the Home Assistant documentation for detailed information.
+
+discovery_topic: "<discovery_prefix>/<component>/[<node_id>/]<object_id>/config" # Define the discovery topic
+# Discovery topic structure: <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
+# discovery_prefix: Usually 'homeassistant'
+# component: Type of device (e.g., sensor, light, etc.)
+# node_id: Optional; used to group multiple components
+# object_id: Unique identifier for the component
+
+device:
+  # Device details: Contains information about the device itself, such as its unique identifier,
+  # connection details, and other specific information related to the device.
+  identifiers: "<identifier><generated_uuid>" # Unique identifier and optional UUID (required)
+  connections: "<connections>" # Device connections (optional)
+  name: "<device_name>" # Device name (required)
+  manufacturer: "<manufacturer>" # Manufacturer name (optional)
+  model: "<model>" # Model name (optional)
+  model_id: "<model_id>" # Model ID (optional)
+  sw_version: "<dev_sw_version>" # Software version (optional)
+  serial_number: "<serial_version>" # Serial number (optional)
+  hw_version: "<hw_version>" # Hardware version (optional)
+  configuration_url: "<configuration_url>" # Configuration URL (optional)
+  suggested_area: "<suggested_area>" # Suggested area (optional)
+
+origin:
+  # Origin details: Provides information about the source or origin of the device, including the
+  # name, software version, and support URL.
+  name: "<origin_name>" # Origin name (required)
+  sw_version: "<org_sw_version>" # Origin software version (optional)
+  support_url: "<support_url>" # Support URL (optional)
+
+components:
+  # Components details: Each component represents a part of the device, such as a sensor or switch.
+  # This section includes details specific to each component, like the platform, device class,
+  # state topic, and more. Delete or add more component sections as needed.
+  "<component_id_1>": # Component 1 ID (required)
+    platform: "<platform>" # Platform (required)
+    device_class: "<device_class>" # Device class (optional)
+    name: "<component_name_1>" # Component name (required)
+    icon: "<icon>" # Icon (optional)
+    unit_of_measurement: "<unit_of_measurement>" # Measurement unit (optional)
+    state_topic: "<state_topic>" # State topic (required)
+    value_template: "<value_template>" # Value template (optional)
+    json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (optional)
+    json_attributes_template: "<json_attributes_template>" # JSON attributes template (optional)
+    unique_id: "<identifier><generated_uuid>" # Unique ID with optional UUID (required)
+    qos: "<qos>" # Quality of Service level (optional)
+
+  "<component_id_2>": # Component 2 ID (required)
+    platform: "<platform>" # Platform (required)
+    device_class: "<device_class>" # Device class (optional)
+    name: "<component_name_2>" # Component name (required)
+    icon: "<icon>" # Icon (optional)
+    unit_of_measurement: "<unit_of_measurement>" # Measurement unit (optional)
+    state_topic: "<state_topic>" # State topic (required)
+    value_template: "<value_template>" # Value template (optional)
+    json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (optional)
+    json_attributes_template: "<json_attributes_template>" # JSON attributes template (optional)
+    unique_id: "<identifier><generated_uuid>" # Unique ID with optional UUID (required)
+    qos: "<qos>" # Quality of Service level (optional)
