@@ -18,6 +18,8 @@ origin:
   sw_version: "{{ package_version }}"
   support_url: "https://github.com/ronschaeffer/twickenham-events"
 
+generate_uuids: "true"
+
 components:
   "next":
     platform: "sensor"

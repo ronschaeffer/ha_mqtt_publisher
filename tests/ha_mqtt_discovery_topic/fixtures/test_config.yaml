@@ -1,0 +1,30 @@
+discovery_topic:
+  discovery_prefix: homeassistant
+  component: sensor
+  object_id: test_device
+  node_id: node1
+
+device:
+  name: Test Device
+  identifiers:
+    - test_device_id
+  manufacturer: Test Manufacturer
+  model: Test Model
+
+components:
+  temperature:
+    name: Temperature
+    unique_id: temp_sensor
+    state_topic: home/temp
+    unit_of_measurement: "°C"
+  humidity:
+    name: Humidity
+    unique_id: humid_sensor
+    state_topic: home/humidity
+    unit_of_measurement: "%"
+
+topic_defaults:
+  qos: 1
+  retain: true
+
+generate_uuids: true

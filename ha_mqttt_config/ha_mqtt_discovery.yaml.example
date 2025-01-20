@@ -1,66 +1,74 @@
 # For more details, refer to the Home Assistant MQTT integration documentation:
-# https://www.home-assistant.io/integrations/mqtt/
-#
-# Note: While the three main sections (device, origin, and components) and some
-# configuration options (such as identifiers, name, state_topic) are required,
-# others are optional. Additional sections and configuration options can be added
-# or deleted as needed. Refer to the Home Assistant documentation for detailed information.
+# https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery
 
-discovery_topic: "<discovery_prefix>/<component>/[<node_id>/]<object_id>/config" # Define the discovery topic
-# Discovery topic structure: <discovery_prefix>/<component>/[<node_id>/]<object_id>/config
-# discovery_prefix: Usually 'homeassistant'
-# component: Type of device (e.g., sensor, light, etc.)
-# node_id: Optional; used to group multiple components
-# object_id: Unique identifier for the component
+# Note:
+#   - Required fields MUST be present in the configuration.
+#   - Optional fields MAY be deleted if not needed.
+#   - If `generate_uuids` is "true", the script will automatically generate UUIDs to append to:
+#       - Each component's `object_id` (used in the discovery topic).
+#       - Each component's `unique_id` (used in the payload).
+#       - Each device's `identifiers`.
+#     The `object_id`, `unique_id`, and `identifiers` will be composed as: <value-from-this-file>-<uuid>
+
+discovery_topic: # Define the discovery topic components
+  discovery_prefix: "<discovery_prefix>" # Usually 'homeassistant' (REQUIRED)
+  component: "<component>" # Type of device (e.g., sensor, light, etc.) (REQUIRED)
+  node_id: "<node_id>" # Used to group multiple components within a device (OPTIONAL - may be deleted)
+  object_id: "<object_id>" # Object ID for the component (REQUIRED, will have a UUID appended if generate_uuids is true)
+
+topic_defaults:
+  retain: "<true_or_false>" # Retain the message (OPTIONAL - may be deleted)
+  qos: "<0_1_or_2>" # Quality of Service level (OPTIONAL - may be deleted)
+
+generate_uuids: "<true_or_false>" # Automatically generate UUIDs for each device and component (OPTIONAL - may be deleted)
 
 device:
-  # Device details: Contains information about the device itself, such as its unique identifier,
-  # connection details, and other specific information related to the device.
-  identifiers: "<identifier><generated_uuid>" # Unique identifier and optional UUID (required)
-  connections: "<connections>" # Device connections (optional)
-  name: "<device_name>" # Device name (required)
-  manufacturer: "<manufacturer>" # Manufacturer name (optional)
-  model: "<model>" # Model name (optional)
-  model_id: "<model_id>" # Model ID (optional)
-  sw_version: "<dev_sw_version>" # Software version (optional)
-  serial_number: "<serial_version>" # Serial number (optional)
-  hw_version: "<hw_version>" # Hardware version (optional)
-  configuration_url: "<configuration_url>" # Configuration URL (optional)
-  suggested_area: "<suggested_area>" # Suggested area (optional)
+  # Device details: Information about the device itself.
+  identifiers: ["<identifier>"] # Unique identifier for the device (REQUIRED - must have at least one entry, will have a UUID appended if generate_uuids is true)
+  connections: "<connections>" # Device connections (OPTIONAL - may be deleted)
+  name: "<device_name>" # Device name (OPTIONAL - may be deleted, but recommended)
+  manufacturer: "<manufacturer>" # Manufacturer name (OPTIONAL - may be deleted)
+  model: "<model>" # Model name (OPTIONAL - may be deleted)
+  model_id: "<model_id>" # Model ID (OPTIONAL - may be deleted)
+  sw_version: "<sw_version>" # Software version (OPTIONAL - may be deleted)
+  serial_number: "<serial_number>" # Serial number (OPTIONAL - may be deleted)
+  hw_version: "<hw_version>" # Hardware version (OPTIONAL - may be deleted)
+  configuration_url: "<configuration_url>" # Configuration URL (OPTIONAL - may be deleted)
+  suggested_area: "<suggested_area>" # Suggested area (OPTIONAL - may be deleted)
 
 origin:
-  # Origin details: Provides information about the source or origin of the device, including the
-  # name, software version, and support URL.
-  name: "<origin_name>" # Origin name (required)
-  sw_version: "<org_sw_version>" # Origin software version (optional)
-  support_url: "<support_url>" # Support URL (optional)
+  # Origin details: Information about the source or origin of the device.
+  name: "<origin_name>" # Origin name (REQUIRED)
+  sw_version: "<origin_sw_version>" # Origin software version (OPTIONAL - may be deleted)
+  support_url: "<support_url>" # Support URL (OPTIONAL - may be deleted)
 
 components:
-  # Components details: Each component represents a part of the device, such as a sensor or switch.
-  # This section includes details specific to each component, like the platform, device class,
-  # state topic, and more. Delete or add more component sections as needed.
-  "<component_id_1>": # Component 1 ID (required)
-    platform: "<platform>" # Platform (required)
-    device_class: "<device_class>" # Device class (optional)
-    name: "<component_name_1>" # Component name (required)
-    icon: "<icon>" # Icon (optional)
-    unit_of_measurement: "<unit_of_measurement>" # Measurement unit (optional)
-    state_topic: "<state_topic>" # State topic (required)
-    value_template: "<value_template>" # Value template (optional)
-    json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (optional)
-    json_attributes_template: "<json_attributes_template>" # JSON attributes template (optional)
-    unique_id: "<identifier><generated_uuid>" # Unique ID with optional UUID (required)
-    qos: "<qos>" # Quality of Service level (optional)
+  # Components details: Each component represents a part of the device.
+  # This section includes details specific to each component.
+  # Delete or add more component sections as needed.
+  <component_id_1>: # Component 1 ID (REQUIRED)
+    platform: "<platform>" # Platform (REQUIRED) - e.g., sensor, binary_sensor, switch, light, etc.
+    device_class: "<device_class>" # Device class (OPTIONAL - may be deleted)
+    name: "<component_name_1>" # Component name (REQUIRED)
+    node_id: "<node_id>" #  Used to group multiple components within a device (OPTIONAL - may be deleted)
+    icon: "<icon>" # Icon (OPTIONAL - may be deleted)
+    unit_of_measurement: "<unit_of_measurement>" # Measurement unit (OPTIONAL - may be deleted)
+    state_topic: "<state_topic>" # State topic (REQUIRED)
+    value_template: "<value_template>" # Value template (OPTIONAL - may be deleted)
+    json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (OPTIONAL - may be deleted)
+    json_attributes_template: "<json_attributes_template>" # JSON attributes template (OPTIONAL - may be deleted)
+    unique_id: "<unique_id>" # Unique ID (REQUIRED, will have a UUID appended if generate_uuids is true)
 
-  "<component_id_2>": # Component 2 ID (required)
-    platform: "<platform>" # Platform (required)
-    device_class: "<device_class>" # Device class (optional)
-    name: "<component_name_2>" # Component name (required)
-    icon: "<icon>" # Icon (optional)
-    unit_of_measurement: "<unit_of_measurement>" # Measurement unit (optional)
-    state_topic: "<state_topic>" # State topic (required)
-    value_template: "<value_template>" # Value template (optional)
-    json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (optional)
-    json_attributes_template: "<json_attributes_template>" # JSON attributes template (optional)
-    unique_id: "<identifier><generated_uuid>" # Unique ID with optional UUID (required)
-    qos: "<qos>" # Quality of Service level (optional)
+  <component_id_2>: # Component 2 ID (REQUIRED)
+    # ... similar structure as component_id_1
+    platform: "<platform>" # Platform (REQUIRED) - e.g., sensor, binary_sensor, switch, light, etc.
+    device_class: "<device_class>" # Device class (OPTIONAL - may be deleted)
+    name: "<component_name_2>" # Component name (REQUIRED)
+    node_id: "<node_id>" #  Used to group multiple components within a device (OPTIONAL - may be deleted)
+    icon: "<icon>" # Icon (OPTIONAL - may be deleted)
+    unit_of_measurement: "<unit_of_measurement>" # Measurement unit (OPTIONAL - may be deleted)
+    state_topic: "<state_topic>" # State topic (REQUIRED)
+    value_template: "<value_template>" # Value template (OPTIONAL - may be deleted)
+    json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (OPTIONAL - may be deleted)
+    json_attributes_template: "<json_attributes_template>" # JSON attributes template (OPTIONAL - may be deleted)
+    unique_id: "<unique_id>" # Unique ID (REQUIRED, will have a UUID appended if generate_uuids is true)

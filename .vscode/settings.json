@@ -4,7 +4,8 @@
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestArgs": [
-        "tests"
+        "tests",
+        "-v"
     ],
     "python.analysis.extraPaths": [
         "./mqtt_publisher"

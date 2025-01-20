@@ -68,7 +68,9 @@ class MQTTPublisher:
                     ca_certs=tls.get("ca_cert"),
                     certfile=tls.get("client_cert"),
                     keyfile=tls.get("client_key"),
-                    cert_reqs=ssl.CERT_REQUIRED if tls.get("verify") else ssl.CERT_NONE,
+                    cert_reqs=(
+                        ssl.CERT_REQUIRED if tls.get("verify") else ssl.CERT_NONE
+                    ),
                     tls_version=ssl.PROTOCOL_TLS,
                 )
                 self.client.tls_insecure_set(not tls.get("verify", True))
@@ -101,7 +103,9 @@ class MQTTPublisher:
         while retries < self.max_retries:
             try:
                 logging.info(
-                    "Attempting connection to " f"{self.broker_url}:{self.broker_port}"
+                    "Attempting connection to %s:%d",
+                    self.broker_url,
+                    self.broker_port,
                 )
                 self.client.connect(self.broker_url, self.broker_port, keepalive=60)
                 self.client.loop_start()
@@ -115,8 +119,7 @@ class MQTTPublisher:
                 logging.warning("Connection timeout")
             except Exception as e:
                 logging.error(
-                    f"Connection attempt {retries + 1} failed: {e}",
-                    exc_info=True,
+                    "Connection attempt %d failed: %s", retries + 1, e, exc_info=True
                 )
                 retries += 1
                 if retries < self.max_retries:
@@ -152,17 +155,14 @@ class MQTTPublisher:
         try:
             if isinstance(payload, (dict, list)):
                 payload = json.dumps(payload)
-            result = self.client.publish(
-                topic, payload, qos=qos, retain=retain
-            )  # Use keyword args here!
+            result = self.client.publish(topic, payload, qos=qos, retain=retain)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logging.info(f"Published message to topic '{topic}'")
+                logging.info("Published message to topic '%s'", topic)
                 return True
-            else:
-                logging.error(f"Publication failed with error code {result.rc}")
-                return False
+            logging.error("Publication failed with error code %d", result.rc)
+            return False
         except Exception as e:
-            logging.error(f"Publication failed: {e}", exc_info=True)
+            logging.error("Publication failed: %s", e, exc_info=True)
             return False
 
     def __enter__(self):

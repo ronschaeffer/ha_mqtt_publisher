@@ -1,14 +1,24 @@
-discovery_topic: "homeassistant/sensor/twickenham_events/config"
+discovery_topic:
+  discovery_prefix: "homeassistant"
+  component: "sensor"
+  object_id: "twickenham_events"
+
+topic_defaults:
+  retain: "true"
+  qos: "1"
+
+generate_uuids: "true"
 
 device:
-  identifiers: "twickenham_events_pR1ffwEZj5sFGo3YjUqCKe"
+  identifiers: "twickenham_events"
   name: "Twickenham Stadium Events"
   manufacturer: "RS"
-  sw_version: "{{ package_version }}" # This will need to be replaced with the actual version
+  model: "Events"
+  sw_version: "0.1"
 
 origin:
   name: "Twickenham Stadium Events"
-  sw_version: "{{ package_version }}" # This will need to be replaced with the actual version
+  sw_version: "0.1"
   support_url: "https://github.com/ronschaeffer/twickenham-events"
 
 components:
@@ -16,18 +26,18 @@ components:
     platform: "sensor"
     name: "Next Event"
     icon: "mdi:stadium"
-    state_topic: "{{ mqtt.topics.next }}" # This will be replaced with the 'next' topic from config
-    value_template: "{{ value[0].date }}" # This will extract the date from the first event in the data
-    json_attributes_topic: "{{ mqtt.topics.next }}" # This will be replaced with the 'next' topic from config
+    state_topic: "twick_events/next"
+    value_template: "{{ value[0].date }}"
+    json_attributes_topic: "twick_events/next"
     json_attributes_template: "{% set event = value[0] -%}\n{\n  \"fixture\": \"{{ event.fixture }}\",\n  \"start_time\": \"{{ event.start_time }}\",\n  \"end_time\": \"{{ event.end_time }}\",\n  \"crowd\": \"{{ event.crowd }}\"\n}" # This will extract event details from the first event in the data
-    unique_id: "next_dRSwqESbjjUGJii2rdgXTX"
+    unique_id: "next"
 
   upcoming:
     platform: "sensor"
     name: "Upcoming Events"
     value_template: "{{ value | length }}" # This will count the number of events in the data
-    state_topic: "{{ mqtt.topics.all_upcoming }}" # This will be replaced with the 'all_upcoming' topic from config
+    state_topic: "twick_events/all_upcoming" # This will be replaced with the 'all_upcoming' topic from config
     icon: "mdi:stadium"
-    json_attributes_topic: "{{ mqtt.topics.all_upcoming }}" # This will be replaced with the 'all_upcoming' topic from config
+    json_attributes_topic: "twick_events/all_upcoming" # This will be replaced with the 'all_upcoming' topic from config
     json_attributes_template: "{{ value | tojson }}" # This will convert the entire data to JSON
-    unique_id: "upcoming_t7RLiB27SL2iCxgs6jVYi3"
+    unique_id: "upcoming"
