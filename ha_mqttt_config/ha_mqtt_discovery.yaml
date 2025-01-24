@@ -31,6 +31,7 @@ components:
     json_attributes_topic: "twick_events/next"
     json_attributes_template: "{% set event = value[0] -%}\n{\n  \"fixture\": \"{{ event.fixture }}\",\n  \"start_time\": \"{{ event.start_time }}\",\n  \"end_time\": \"{{ event.end_time }}\",\n  \"crowd\": \"{{ event.crowd }}\"\n}" # This will extract event details from the first event in the data
     unique_id: "next"
+    availability_topic: "twick_events/next/availability"
 
   upcoming:
     platform: "sensor"
@@ -41,3 +42,4 @@ components:
     json_attributes_topic: "twick_events/all_upcoming" # This will be replaced with the 'all_upcoming' topic from config
     json_attributes_template: "{{ value | tojson }}" # This will convert the entire data to JSON
     unique_id: "upcoming"
+    availability_topic: "twick_events/next/availability"

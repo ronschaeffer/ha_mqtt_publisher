@@ -58,9 +58,9 @@ components:
     json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (OPTIONAL - may be deleted)
     json_attributes_template: "<json_attributes_template>" # JSON attributes template (OPTIONAL - may be deleted)
     unique_id: "<unique_id>" # Unique ID (REQUIRED, will have a UUID appended if generate_uuids is true)
+    availability_topic: "<availability_topic>" # Availability topic (OPTIONAL - may be deleted)
 
   <component_id_2>: # Component 2 ID (REQUIRED)
-    # ... similar structure as component_id_1
     platform: "<platform>" # Platform (REQUIRED) - e.g., sensor, binary_sensor, switch, light, etc.
     device_class: "<device_class>" # Device class (OPTIONAL - may be deleted)
     name: "<component_name_2>" # Component name (REQUIRED)
@@ -72,3 +72,4 @@ components:
     json_attributes_topic: "<json_attributes_topic>" # JSON attributes topic (OPTIONAL - may be deleted)
     json_attributes_template: "<json_attributes_template>" # JSON attributes template (OPTIONAL - may be deleted)
     unique_id: "<unique_id>" # Unique ID (REQUIRED, will have a UUID appended if generate_uuids is true)
+    availability_topic: "<availability_topic>" # Availability topic (OPTIONAL - may be deleted)

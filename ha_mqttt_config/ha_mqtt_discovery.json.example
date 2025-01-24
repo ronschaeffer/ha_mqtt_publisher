@@ -1,0 +1,50 @@
+{
+  "device": {
+    "identifiers": "{{ identifier }}{{ generated_uuid }}", // Unique identifier for the device (REQUIRED)
+    "connections": "{{ connections }}", // Device connections (OPTIONAL - may be deleted)
+    "name": "{{ device_name }}", // Device name (OPTIONAL - may be deleted, but recommended)
+    "manufacturer": "{{ manufacturer }}", // Manufacturer name (OPTIONAL - may be deleted)
+    "model": "{{ model }}", // Model name (OPTIONAL - may be deleted)
+    "model_id": "{{ model_id }}", // Model ID (OPTIONAL - may be deleted)
+    "sw_version": "{{ dev_sw_version }}", // Software version (OPTIONAL - may be deleted)
+    "serial_number": "{{ serial_version }}", // Serial number (OPTIONAL - may be deleted)
+    "hw_version": "{{ hw_version }}", // Hardware version (OPTIONAL - may be deleted)
+    "configuration_url": "{{ configuration_url }}", // Configuration URL (OPTIONAL - may be deleted)
+    "suggested_area": "{{ suggested_area }}" // Suggested area (OPTIONAL - may be deleted)
+  },
+  "origin": {
+    "name": "{{ origin_name }}", // Origin name (REQUIRED)
+    "sw_version": "{{ org_sw_version }}", // Origin software version (OPTIONAL - may be deleted)
+    "support_url": "{{ support_url }}" // Support URL (OPTIONAL - may be deleted)
+  },
+  "components": {
+    "{{ component_id_1 }}": {
+      "platform": "{{ platform }}", // Platform (REQUIRED) - e.g., sensor, binary_sensor, switch, light, etc.
+      "device_class": "{{ device_class }}", // Device class (OPTIONAL - may be deleted)
+      "name": "{{ component_name_1 }}", // Component name (REQUIRED)
+      "icon": "{{ icon }}", // Icon (OPTIONAL - may be deleted)
+      "unit_of_measurement": "{{ unit_of_measurement }}", // Measurement unit (OPTIONAL - may be deleted)
+      "state_topic": "{{ state_topic }}", // State topic (REQUIRED)
+      "value_template": "{{ value_template }}", // Value template (OPTIONAL - may be deleted)
+      "json_attributes_topic": "{{ json_attributes_topic }}", // JSON attributes topic (OPTIONAL - may be deleted)
+      "json_attributes_template": "{{ json_attributes_template }}", // JSON attributes template (OPTIONAL - may be deleted)
+      "unique_id": "{{ identifier }}{{ generated_uuid }}", // Unique ID (REQUIRED, will have a UUID appended if generate_uuids is true)
+      "qos": "{{ qos }}", // Quality of Service level (OPTIONAL - may be deleted)
+      "availability_topic": "{{ availability_topic }}" // Availability topic (OPTIONAL - may be deleted)
+    },
+    "{{ component_id_2 }}": {
+      "platform": "{{ platform }}", // Platform (REQUIRED) - e.g., sensor, binary_sensor, switch, light, etc.
+      "device_class": "{{ device_class }}", // Device class (OPTIONAL - may be deleted)
+      "name": "{{ component_name_2 }}", // Component name (REQUIRED)
+      "icon": "{{ icon }}", // Icon (OPTIONAL - may be deleted)
+      "unit_of_measurement": "{{ unit_of_measurement }}", // Measurement unit (OPTIONAL - may be deleted)
+      "state_topic": "{{ state_topic }}", // State topic (REQUIRED)
+      "value_template": "{{ value_template }}", // Value template (OPTIONAL - may be deleted)
+      "json_attributes_topic": "{{ json_attributes_topic }}", // JSON attributes topic (OPTIONAL - may be deleted)
+      "json_attributes_template": "{{ json_attributes_template }}", // JSON attributes template (OPTIONAL - may be deleted)
+      "unique_id": "{{ identifier }}{{ generated_uuid }}", // Unique ID (REQUIRED, will have a UUID appended if generate_uuids is true)
+      "qos": "{{ qos }}", // Quality of Service level (OPTIONAL - may be deleted)
+      "availability_topic": "{{ availability_topic }}" // Availability topic (OPTIONAL - may be deleted)
+    }
+  }
+}
