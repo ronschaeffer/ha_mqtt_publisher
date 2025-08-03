@@ -1,0 +1,42 @@
+# Enhanced configuration for mqtt_publisher with Home Assistant Discovery
+# Copy this to config/config.yaml and modify for your environment
+
+# Application identity (used in Home Assistant device registration)
+app:
+  name: "MQTT Publisher Example"
+  unique_id_prefix: "mqtt_pub_example"
+  manufacturer: "Generic MQTT Publisher"
+  model: "MQTT-Pub-Py-v2"
+
+# MQTT Configuration
+mqtt:
+  broker_url: "your_broker_url"
+  broker_port: 8883
+  client_id: "mqtt_publisher_ha_discovery"
+  base_topic: "mqtt_publisher"
+  security: "username"  # Options: none, username, tls, tls_with_client_cert
+  auth:
+    username: "your_username"
+    password: "your_password"
+  tls:
+    ca_cert: null  # Path to CA certificate
+    client_cert: null  # Path to client certificate
+    client_key: null  # Path to client key
+    verify: false  # Set to true in production
+  topics:
+    status: "mqtt_publisher/status"
+    temperature: "mqtt_publisher/sensors/temperature"
+    humidity: "mqtt_publisher/sensors/humidity"
+    data: "mqtt_publisher/sensors/data"
+
+# Home Assistant Integration
+home_assistant:
+  enabled: true
+  discovery_prefix: "homeassistant"
+
+# Last Will and Testament
+last_will:
+  topic: "mqtt_publisher/status"
+  payload: "offline"
+  qos: 1
+  retain: true

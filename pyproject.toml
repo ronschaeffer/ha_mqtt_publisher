@@ -9,9 +9,12 @@ homepage = "https://github.com/ronschaeffer/mqtt_publisher"
 repository = "https://github.com/ronschaeffer/mqtt_publisher"
 keywords = ["mqtt", "publisher", "iot"]
 packages = [
-    { include = "mqtt_publisher" },
-    { include = "ha_mqtt_discovery" }
+    { include = "mqtt_publisher" }
 ]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = ">=3.9"
