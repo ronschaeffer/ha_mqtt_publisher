@@ -11,17 +11,11 @@
     ],
     "python.envFile": "${workspaceFolder}/.env",
     "editor.formatOnSave": true,
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.python"
-    },
-    "python.formatting.provider": "none",
-    "python.linting.enabled": false,
     "files.exclude": {
         "**/__pycache__": true,
         "**/*.pyc": true
     },
     "terminal.integrated.env.linux": {
         "PYTHONPATH": "${workspaceFolder}"
-    },
-    "terminal.integrated.cwd": "${workspaceFolder}"
+    }
 }
