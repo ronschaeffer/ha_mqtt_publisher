@@ -13,7 +13,7 @@ Home Assistant MQTT discovery configurations. It includes:
 - Discovery Publisher: High-level interface for publishing discovery configs
 
 Usage:
-    from ha_discovery import Device, Sensor, StatusSensor, publish_discovery_configs
+    from mqtt_publisher.ha_discovery import Device, Sensor, StatusSensor, publish_discovery_configs
     from mqtt_publisher.publisher import MQTTPublisher
 
     device = Device(config)
