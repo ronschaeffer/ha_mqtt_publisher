@@ -2,7 +2,7 @@ import json
 import logging
 import ssl
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import paho.mqtt.client as mqtt
 
@@ -33,10 +33,10 @@ class MQTTPublisher:
         broker_port: int,
         client_id: str,
         security: str = "none",
-        auth: Optional[Dict] = None,
-        tls: Optional[Dict] = None,
+        auth: dict | None = None,
+        tls: dict | None = None,
         max_retries: int = 3,
-        last_will: Optional[Dict] = None,
+        last_will: dict | None = None,
     ):
         self.client = mqtt.Client(client_id=client_id)
         self.broker_url = broker_url
@@ -153,7 +153,7 @@ class MQTTPublisher:
             return False
 
         try:
-            if isinstance(payload, (dict, list)):
+            if isinstance(payload, dict | list):
                 payload = json.dumps(payload)
             result = self.client.publish(topic, payload, qos=qos, retain=retain)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:

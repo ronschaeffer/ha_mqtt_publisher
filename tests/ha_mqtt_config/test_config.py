@@ -1,5 +1,5 @@
-import sys
 from pathlib import Path
+import sys
 
 
 def test_sys_path():
@@ -13,5 +13,5 @@ def test_import_module():
         import mqtt_publisher
 
         assert mqtt_publisher is not None
-    except ImportError:
-        assert False, "Should be able to import mqtt_publisher module"
+    except ImportError as e:
+        raise AssertionError("Should be able to import mqtt_publisher module") from e

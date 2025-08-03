@@ -6,9 +6,8 @@ Processes YAML configuration for Home Assistant MQTT discovery messages.
 
 import json
 import logging
-import uuid
 from pathlib import Path
-from typing import Dict, Tuple
+import uuid
 
 import yaml
 
@@ -32,7 +31,7 @@ class HADiscoveryProcessor:
         """Load and validate the YAML configuration file."""
         logging.debug("Loading configuration file: %s", self.config_path)
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 config = yaml.safe_load(f)
             logging.debug("Configuration loaded: %s", config)
 
@@ -47,7 +46,7 @@ class HADiscoveryProcessor:
             return config
         except (yaml.YAMLError, OSError) as e:
             logging.error("Error loading config file: %s", e)
-            raise RuntimeError(f"Error loading config file: {e}")
+            raise RuntimeError(f"Error loading config file: {e}") from e
 
     def _append_uuid(self, value: str) -> str:
         """Append UUID to a string if UUID generation is enabled."""
@@ -96,13 +95,11 @@ class HADiscoveryProcessor:
         logging.debug("Generated discovery topic: %s", topic)
         return topic
 
-    def get_component_payload(self, component_name: str) -> Dict:
+    def get_component_payload(self, component_name: str) -> dict:
         """Generate discovery payload for a component."""
         logging.debug("Generating component payload for: %s", component_name)
         if component_name not in self.config["components"]:
-            raise ValueError(
-                f"Component {component_name} " "not found in configuration"
-            )
+            raise ValueError(f"Component {component_name} not found in configuration")
 
         # Get base component configuration
         component = self.config["components"][component_name]
@@ -138,17 +135,17 @@ class HADiscoveryProcessor:
         logging.debug("Generated component payload: %s", payload)
         return payload
 
-    def get_topic_defaults(self) -> Dict:
+    def get_topic_defaults(self) -> dict:
         """Return topic defaults from configuration."""
         return self.config.get("topic_defaults", {})
 
-    def process_component(self, component_name: str) -> Tuple[str, str]:
+    def process_component(self, component_name: str) -> tuple[str, str]:
         """Process a component and return its discovery topic and payload."""
         topic = self.get_discovery_topic(component_name)
         payload = self.get_component_payload(component_name)
         return topic, json.dumps(payload)
 
-    def get_device_discovery_message(self) -> Tuple[str, str]:
+    def get_device_discovery_message(self) -> tuple[str, str]:
         """
         Generate Home Assistant device discovery topic and payload.
         Uses device config directly from YAML without field restrictions.
@@ -186,7 +183,7 @@ def main():
         device_topic, device_payload = processor.get_device_discovery_message()
         print("\nDevice Discovery:")
         print(f"Topic: {device_topic}")
-        print("Payload:\n" f"{json.dumps(json.loads(device_payload), indent=2)}")
+        print(f"Payload:\n{json.dumps(json.loads(device_payload), indent=2)}")
 
         # Process each component
         for component_name in processor.config["components"]:
@@ -194,7 +191,7 @@ def main():
                 topic, payload = processor.process_component(component_name)
                 print(f"\nComponent: {component_name}")
                 print(f"Discovery Topic: {topic}")
-                print("Payload:\n" f"{json.dumps(json.loads(payload), indent=2)}")
+                print(f"Payload:\n{json.dumps(json.loads(payload), indent=2)}")
             except Exception as e:
                 print(f"Error processing component {component_name}: {e}")
 

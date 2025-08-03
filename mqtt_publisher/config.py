@@ -3,7 +3,7 @@ import yaml
 
 class Config:
     def __init__(self, config_path):
-        with open(config_path, "r") as config_file:
+        with open(config_path) as config_file:
             self.config = yaml.safe_load(config_file)
 
     def __getattr__(self, name):
