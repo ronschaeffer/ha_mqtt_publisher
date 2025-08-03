@@ -2,7 +2,7 @@
 name = "mqtt-publisher"
 version = "0.1.0"
 description = "An MQTT publisher package"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["ronschaeffer <ron@ronschaeffer.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/ronschaeffer/mqtt_publisher"
