@@ -20,6 +20,10 @@ repos:
       - id: codespell
         args: ["--write-changes"] # Enable auto-fix
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.4.1 # Use the latest version
+    hooks:
+      - id: mypy
         additional_dependencies: [
             "types-requests", # Add required type stubs
             "types-PyYAML",

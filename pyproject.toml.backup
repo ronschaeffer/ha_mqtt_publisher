@@ -23,6 +23,9 @@ typing-extensions = "^4.7.0"  # For advanced typing support
 pytest = "^8.3.4"
 pytest-mock = "^3.10.0"
 ruff = "^0.12.7"
+mypy = "^1.0.0"
+types-PyYAML = "^6.0.12"
+types-paho-mqtt = "^1.6"
 codespell = "^2.1.0"
 pre-commit = "^2.15.0"
 
