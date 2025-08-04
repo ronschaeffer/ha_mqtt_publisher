@@ -6,10 +6,39 @@
 
 An MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides both an MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
 
+## 🚀 Quick Start
+
+```python
+from mqtt_publisher import MQTTConfig, MQTTPublisher
+
+# Enhanced configuration with automatic validation and type conversion
+config = MQTTConfig.build_config(
+    broker_url="mqtt.home.local",
+    broker_port="8883",  # String automatically converted to int
+    client_id="my_device",
+    security="username",
+    username="mqtt_user",
+    password="mqtt_pass"
+)
+
+# Context manager ensures proper cleanup
+with MQTTPublisher(config=config) as publisher:
+    # Publish sensor data with automatic JSON serialization
+    publisher.publish("sensors/temperature", {
+        "value": 23.5,
+        "unit": "°C"
+    }, retain=True)
+```
+
 ## ✨ Features
 
 ### 🚀 MQTT Publishing Engine
 
+- **Enhanced Configuration Handling** with automatic type conversion and validation
+- **Flexible Constructor** supporting both individual parameters and config dictionaries
+- **Automatic Port Type Conversion** (strings automatically converted to integers)
+- **Configuration Builder Pattern** with `MQTTConfig` utility class
+- **Comprehensive Validation** with helpful error messages for common misconfigurations
 - **Connection Management** with retry logic and exponential backoff
 - **Multiple Security Modes**: None, Username/Password, TLS, TLS with client certificates
 - **Context Manager Support** for automatic resource cleanup
@@ -194,10 +223,22 @@ mqtt:
 ```python
 from mqtt_publisher.publisher import MQTTPublisher
 
-# Configuration
+# Method 1: Individual parameters (with automatic type conversion)
+publisher = MQTTPublisher(
+    broker_url="your-broker.example.com",
+    broker_port="8883",  # String ports automatically converted to int
+    client_id="your_client_id",
+    security="username",
+    auth={
+        "username": "your_username",
+        "password": "your_password"
+    }
+)
+
+# Method 2: Configuration dictionary (recommended)
 config = {
     "broker_url": "your-broker.example.com",
-    "broker_port": "your_broker-port",
+    "broker_port": "8883",  # String automatically converted
     "client_id": "your_client_id",
     "security": "username",
     "auth": {
@@ -206,44 +247,152 @@ config = {
     }
 }
 
-# Method 1: Manual connection management
-publisher = MQTTPublisher(**config)
-if publisher.connect():
-    publisher.publish("your/topic", {"message": "Hello, MQTT!"})
-    publisher.disconnect()
-
-# Method 2: Context manager (recommended)
-with MQTTPublisher(**config) as publisher:
+# Context manager usage (recommended)
+with MQTTPublisher(config=config) as publisher:
     publisher.publish("your/topic", {"message": "Hello, MQTT!"}, retain=True)
 ```
 
-### Using with Environment Variables
+### Enhanced Configuration with MQTTConfig Builder
 
 ```python
+from mqtt_publisher import MQTTConfig, MQTTPublisher
+
+# Method 3: Builder pattern with automatic validation
+config = MQTTConfig.build_config(
+    broker_url="your-broker.example.com",
+    broker_port="8883",  # Automatically converted to int
+    client_id="your_client_id",
+    security="username",
+    username="your_username",
+    password="your_password",
+    max_retries="3"  # Also automatically converted
+)
+
+with MQTTPublisher(config=config) as publisher:
+    publisher.publish("sensors/temperature", {"value": 23.5, "unit": "°C"})
+```
+
+### Using with YAML Configuration and Environment Variables
+
+```python
+from mqtt_publisher import MQTTConfig, MQTTPublisher
 from mqtt_publisher.config import Config
-from mqtt_publisher.publisher import MQTTPublisher
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Load configuration (automatically uses environment variables)
-config = Config("config/config.yaml")
+# Load YAML configuration (with environment variable substitution)
+yaml_config = Config("config/config.yaml")
 
-# Create MQTT publisher
-mqtt_config = {
-    "broker_url": config.get("mqtt.broker_url"),
-    "broker_port": config.get("mqtt.broker_port"),
-    "client_id": config.get("mqtt.client_id"),
-    "security": config.get("mqtt.security"),
-    "auth": {
-        "username": config.get("mqtt.auth.username"),
-        "password": config.get("mqtt.auth.password")
+# Method 4: From nested configuration dictionary
+config_dict = yaml_config.config  # Your YAML config as dict
+mqtt_config = MQTTConfig.from_dict(config_dict)
+
+with MQTTPublisher(config=mqtt_config) as publisher:
+    publisher.publish("sensors/temperature", {"value": 23.5, "unit": "°C"})
+```
+
+### Error Handling and Validation
+
+The library provides enhanced error handling with helpful messages:
+
+```python
+from mqtt_publisher import MQTTPublisher
+
+try:
+    # This will provide helpful error message
+    publisher = MQTTPublisher(
+        broker_url="mqtt.example.com",
+        broker_port=8883,
+        client_id="test",
+        security="tls",
+        # Missing TLS configuration - will show helpful error
+    )
+except ValueError as e:
+    print(f"Configuration Error: {e}")
+    # Output: "TLS configuration required when security='tls'"
+
+try:
+    # This will warn about port/TLS mismatch
+    publisher = MQTTPublisher(
+        broker_url="mqtt.example.com",
+        broker_port=1883,  # Non-TLS port
+        client_id="test",
+        tls={"verify": True}  # TLS enabled
+    )
+except Exception as e:
+    # Warning logged: "TLS enabled but using non-TLS port 1883. Consider port 8883 for TLS"
+    pass
+```
+
+## 🎯 Enhanced Features (New!)
+
+### Automatic Type Conversion
+
+String values from environment variables or configuration files are automatically converted:
+
+```python
+# These are equivalent - strings automatically convert to integers
+publisher1 = MQTTPublisher(broker_port="8883")    # String
+publisher2 = MQTTPublisher(broker_port=8883)      # Integer
+```
+
+### Configuration Validation
+
+Comprehensive validation with helpful error messages:
+
+```python
+# Missing required field
+try:
+    MQTTPublisher(broker_port=8883, client_id="test")  # Missing broker_url
+except ValueError as e:
+    print(e)  # "broker_url is required"
+
+# Invalid port range
+try:
+    MQTTPublisher(broker_url="test", broker_port=99999)  # Invalid port
+except ValueError as e:
+    print(e)  # "broker_port must be integer 1-65535, got: 99999"
+
+# Security/TLS mismatches (warnings, not errors)
+publisher = MQTTPublisher(
+    broker_url="test",
+    broker_port=1883,  # Non-TLS port
+    tls={"verify": True}  # TLS enabled
+)
+# Logs warning: "TLS enabled but using non-TLS port 1883. Consider port 8883 for TLS"
+```
+
+### Configuration Builder Pattern
+
+Use `MQTTConfig` for complex configurations:
+
+```python
+from mqtt_publisher import MQTTConfig
+
+# Build from individual parameters
+config = MQTTConfig.build_config(
+    broker_url="mqtt.example.com",
+    broker_port="8883",
+    client_id="my_client",
+    security="tls",
+    username="user",
+    password="pass"
+)
+
+# Or from nested dictionary (like YAML config)
+yaml_style_config = {
+    "mqtt": {
+        "broker_url": "mqtt.example.com",
+        "broker_port": 8883,
+        "auth": {"username": "user", "password": "pass"}
     }
 }
+config = MQTTConfig.from_dict(yaml_style_config)
 
-with MQTTPublisher(**mqtt_config) as publisher:
-    publisher.publish("sensors/temperature", {"value": 23.5, "unit": "°C"})
+# Both return validated config ready for MQTTPublisher
+publisher = MQTTPublisher(config=config)
 ```
 
 ### 🏠 Home Assistant MQTT Discovery
@@ -355,6 +504,89 @@ The discovery framework automatically:
 - ✅ Handles discovery topic formatting
 - ✅ Manages entity uniqueness
 - ✅ Provides status monitoring capabilities
+
+## 📚 Examples
+
+### Complete Examples
+
+See the `examples/` directory for comprehensive examples:
+
+- **`enhanced_features_example.py`** - Demonstrates all new enhanced features
+- **`ha_discovery_complete_example.py`** - Full Home Assistant discovery setup
+- **`config/config.yaml.example`** - Complete configuration template
+
+### Documentation
+
+- **`ENHANCEMENTS.md`** - Detailed documentation of all enhanced features
+- **`TWICKENHAM_MIGRATION_GUIDE.md`** - Guide for migrating existing projects
+- **`GITATTRIBUTES_FIX_SUMMARY.md`** - Cross-platform line ending configuration
+
+### Real-World Usage Patterns
+
+```python
+# Pattern 1: Simple sensor publishing with validation
+from mqtt_publisher import MQTTConfig, MQTTPublisher
+
+config = MQTTConfig.build_config(
+    broker_url="mqtt.home.local",
+    broker_port="8883",  # String auto-converted
+    client_id="temperature_sensor",
+    security="username",
+    username="mqtt_user",
+    password="mqtt_pass"
+)
+
+with MQTTPublisher(config=config) as publisher:
+    publisher.publish("sensors/living_room/temperature", {
+        "value": 23.5,
+        "unit": "°C",
+        "timestamp": "2025-08-04T21:00:00Z"
+    }, retain=True)
+
+# Pattern 2: From YAML configuration
+from mqtt_publisher.config import Config
+
+yaml_config = Config("config/config.yaml")
+mqtt_config = yaml_config.get("mqtt")  # Extract MQTT section
+
+with MQTTPublisher(config=mqtt_config) as publisher:
+    # Publish multiple sensors
+    for sensor_name, value in sensors.items():
+        topic = f"sensors/{sensor_name}"
+        publisher.publish(topic, {"value": value}, retain=True)
+```
+
+## 🔄 Recent Updates
+
+### v2.0.0 - Enhanced Configuration & Validation (August 2025)
+
+- ✨ **Automatic Type Conversion**: String ports and retry counts auto-convert to integers
+- ✨ **Configuration Dictionary Support**: Constructor accepts `config` parameter with complete configuration
+- ✨ **MQTTConfig Builder**: New utility class for building and validating configurations
+- ✨ **Enhanced Validation**: Comprehensive validation with helpful error messages
+- ✨ **Port/TLS Consistency Warnings**: Warns about common port/security mismatches
+- ✨ **Improved Error Messages**: Context-aware error reporting for faster troubleshooting
+
+### Migration from v1.x
+
+Existing code continues to work unchanged. New features are opt-in:
+
+```python
+# v1.x style (still works)
+publisher = MQTTPublisher(
+    broker_url="mqtt.example.com",
+    broker_port=8883,
+    client_id="test"
+)
+
+# v2.x enhanced style (recommended)
+config = MQTTConfig.build_config(
+    broker_url="mqtt.example.com",
+    broker_port="8883",  # String auto-converted
+    client_id="test"
+)
+publisher = MQTTPublisher(config=config)
+```
 
 ## 🧪 Testing
 
