@@ -5,7 +5,7 @@
 mqtt:
   # Broker connection settings
   broker_url: "${MQTT_BROKER_URL}"      # Environment variable: your-broker.example.com
-  broker_port: 8883                     # Standard ports: 1883 (plain), 8883 (TLS), 8884 (TLS+cert)
+  broker_port: "${MQTT_BROKER_PORT}"    # Environment variable: 1883 (plain), 8883 (TLS), 8884 (TLS+cert)
   client_id: "${MQTT_CLIENT_ID}"        # Environment variable: unique client identifier
 
   # Security configuration - choose one:

@@ -5,6 +5,7 @@ A professional-grade MQTT publishing library with integrated **Home Assistant MQ
 ## ✨ Features
 
 ### 🚀 MQTT Publishing Engine
+
 - **Robust Connection Management** with retry logic and exponential backoff
 - **Multiple Security Modes**: None, Username/Password, TLS, TLS with client certificates
 - **Context Manager Support** for automatic resource cleanup
@@ -13,6 +14,7 @@ A professional-grade MQTT publishing library with integrated **Home Assistant MQ
 - **Connection State Tracking** with timeout handling
 
 ### 🏠 Home Assistant Integration
+
 - **Complete MQTT Discovery Framework**: Object-oriented system for creating HA entities
 - **Device Grouping**: Automatically groups sensors under logical devices
 - **Status Monitoring**: Built-in binary sensor for system health monitoring
@@ -22,13 +24,16 @@ A professional-grade MQTT publishing library with integrated **Home Assistant MQ
 ## 📦 Installation
 
 ### Option 1: Git Dependency (Recommended)
+
 Add to your `pyproject.toml`:
+
 ```toml
 [tool.poetry.dependencies]
 mqtt-publisher = {git = "https://github.com/ronschaeffer/mqtt_publisher.git"}
 ```
 
 ### Option 2: Local Development
+
 ```bash
 git clone https://github.com/ronschaeffer/mqtt_publisher.git
 cd mqtt_publisher
@@ -46,6 +51,7 @@ This project supports **hierarchical environment variable loading** for flexible
 3. **System environment**: System variables have highest priority
 
 #### Shared Environment Example (`/home/ron/projects/.env`):
+
 ```bash
 # Shared MQTT configuration across all projects
 MQTT_BROKER_URL=10.10.10.21
@@ -55,6 +61,7 @@ MQTT_PASSWORD=your_mqtt_password
 ```
 
 #### Project-Specific Environment (`.env`):
+
 ```bash
 # Project-specific client ID (overrides shared settings)
 MQTT_CLIENT_ID=mqtt_publisher_client_001
@@ -65,17 +72,21 @@ LOG_LEVEL=INFO
 ```
 
 #### Environment Loading
+
 The configuration automatically loads environment variables using this hierarchy:
+
 1. Load shared parent environment (`/home/ron/projects/.env`)
 2. Load project environment (`.env`) - overrides shared values
 3. System environment variables - highest priority
 
 #### Quick Setup
+
 1. Copy the example: `cp .env.example .env`
 2. Edit `.env` with your actual values
 3. The configuration automatically uses environment variables with `${VARIABLE_NAME}` syntax
 
 ### Configuration File
+
 Create `config/config.yaml` based on `config/config.yaml.example`:
 
 ```yaml
@@ -249,6 +260,7 @@ with MQTTPublisher(**mqtt_config) as publisher:
 ## 📖 Complete Example
 
 See [`examples/ha_discovery_complete_example.py`](examples/ha_discovery_complete_example.py) for a comprehensive example showing:
+
 - Environment variable configuration
 - Device and sensor creation
 - Discovery configuration publishing
@@ -259,12 +271,12 @@ See [`examples/ha_discovery_complete_example.py`](examples/ha_discovery_complete
 
 ### Security Modes
 
-| Mode | Description | Required Settings |
-|------|-------------|-------------------|
-| `"none"` | No authentication | None |
-| `"username"` | Username/password | `auth.username`, `auth.password` |
-| `"tls"` | TLS encryption + username/password | `auth.*`, `tls.verify` |
-| `"tls_with_client_cert"` | TLS + client certificates | `auth.*`, `tls.*` |
+| Mode                     | Description                        | Required Settings                |
+| ------------------------ | ---------------------------------- | -------------------------------- |
+| `"none"`                 | No authentication                  | None                             |
+| `"username"`             | Username/password                  | `auth.username`, `auth.password` |
+| `"tls"`                  | TLS encryption + username/password | `auth.*`, `tls.verify`           |
+| `"tls_with_client_cert"` | TLS + client certificates          | `auth.*`, `tls.*`                |
 
 ### MQTT Publisher Parameters
 
@@ -284,6 +296,7 @@ MQTTPublisher(
 ### Home Assistant Discovery
 
 The discovery framework automatically:
+
 - ✅ Creates device entries in Home Assistant
 - ✅ Groups related sensors under devices
 - ✅ Handles discovery topic formatting
@@ -293,11 +306,13 @@ The discovery framework automatically:
 ## 🧪 Testing
 
 Run the test suite:
+
 ```bash
 poetry run pytest
 ```
 
 Run with coverage:
+
 ```bash
 poetry run pytest --cov=mqtt_publisher --cov-report=html
 ```
@@ -323,26 +338,29 @@ For questions, issues, or contributions, please open an issue on GitHub.
 **Built with ❤️ for the IoT and Home Assistant community**
 
 # Create device and sensors
+
 device = Device(config)
 sensors = [
-    create_sensor(
-        config=config,
-        device=device,
-        name="Temperature",
-        unique_id="temperature",
-        state_topic="sensors/temperature",
-        value_template="{{ value_json.temperature }}",
-        unit_of_measurement="°C",
-        device_class="temperature",
-        icon="mdi:thermometer"
-    )
+create_sensor(
+config=config,
+device=device,
+name="Temperature",
+unique_id="temperature",
+state_topic="sensors/temperature",
+value_template="{{ value_json.temperature }}",
+unit_of_measurement="°C",
+device_class="temperature",
+icon="mdi:thermometer"
+)
 ]
 
 # Publish discovery configurations and data
-with MQTTPublisher(**mqtt_config) as publisher:
-    publish_discovery_configs(config, publisher, sensors, device)
-    publisher.publish("sensors/temperature", {"temperature": 23.5})
-```
+
+with MQTTPublisher(\*\*mqtt_config) as publisher:
+publish_discovery_configs(config, publisher, sensors, device)
+publisher.publish("sensors/temperature", {"temperature": 23.5})
+
+````
 
 ### Advanced: Custom Entity Configuration
 
@@ -371,7 +389,7 @@ custom_sensor = Sensor(
 
 entities = [status_sensor, custom_sensor]
 publish_discovery_configs(config, publisher, entities, device)
-```
+````
 
 ## Running Tests
 
