@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from ha_mqtt_discovery.topic import HADiscoveryProcessor
+from mqtt_publisher.ha_mqtt_discovery.topic import HADiscoveryProcessor
 
 
 @pytest.fixture
