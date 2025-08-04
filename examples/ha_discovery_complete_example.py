@@ -1,12 +1,24 @@
-# examples/ha_discovery_complete_example.py
-
+#!/usr/bin/env python3
 """
 Complete Home Assistant MQTT Discovery Example
 
 This example demonstrates how to use the mqtt_publisher package with
 the integrated Home Assistant discovery framework to create a robust
 MQTT-based sensor system.
+
+Prerequisites:
+1. Create config/config.yaml based on config/config.yaml.example
+2. Set up environment variables in .env file
+3. Install dependencies: poetry install
+
+Usage:
+    python examples/ha_discovery_complete_example.py
 """
+
+from datetime import datetime
+import json
+from pathlib import Path
+import time
 
 from mqtt_publisher.config import Config
 from mqtt_publisher.ha_discovery import (
@@ -18,131 +30,196 @@ from mqtt_publisher.ha_discovery import (
 from mqtt_publisher.publisher import MQTTPublisher
 
 
+def load_environment():
+    """Load environment variables from .env file using hierarchical loading."""
+    try:
+        from dotenv import load_dotenv
+
+        # Load shared environment first (if exists)
+        parent_env = Path(__file__).parent.parent.parent / ".env"
+        if parent_env.exists():
+            load_dotenv(parent_env, verbose=False)
+            print(f"✅ Loaded shared environment from: {parent_env}")
+
+        # Load project-specific environment second
+        project_env = Path(__file__).parent.parent / ".env"
+        if project_env.exists():
+            load_dotenv(project_env, override=True, verbose=False)
+            print(f"✅ Loaded project environment from: {project_env}")
+
+    except ImportError:
+        print("⚠️  python-dotenv not installed. Install with: poetry add python-dotenv")
+
+
 def main():
     """
     Example showing complete Home Assistant MQTT Discovery setup.
     """
+    print("🚀 Starting Home Assistant MQTT Discovery Example")
+
+    # Load environment variables
+    load_environment()
 
     # Load configuration
-    config = Config("config/config.yaml")
+    config_path = Path(__file__).parent.parent / "config" / "config.yaml"
+    if not config_path.exists():
+        print(f"❌ Configuration file not found: {config_path}")
+        print(
+            "   Copy config/config.yaml.example to config/config.yaml and update settings"
+        )
+        return
 
-    # Create MQTT publisher with enhanced configuration
+    config = Config(str(config_path))
+
+    # Create device representing your application
+    device = Device(
+        name="MQTT Publisher Example",
+        identifier="mqtt_publisher_example_001",
+        manufacturer="MQTT Publisher Library",
+        model="Example Device v1.0",
+        sw_version="1.0.0",
+    )
+    print(f"📱 Created device: {device.name}")
+
+    # Create various sensors to demonstrate capabilities
+
+    # 1. Temperature sensor with value template
+    temp_sensor = create_sensor(
+        device=device,
+        name="Temperature",
+        unique_id="temp_example_001",
+        state_topic="mqtt_publisher/sensors/temperature",
+        value_template="{{ value_json.value }}",
+        unit_of_measurement="°C",
+        device_class="temperature",
+        icon="mdi:thermometer",
+    )
+
+    # 2. Humidity sensor
+    humidity_sensor = create_sensor(
+        device=device,
+        name="Humidity",
+        unique_id="humidity_example_001",
+        state_topic="mqtt_publisher/sensors/humidity",
+        value_template="{{ value_json.value }}",
+        unit_of_measurement="%",
+        device_class="humidity",
+        icon="mdi:water-percent",
+    )
+
+    # 3. Status sensor for system health monitoring
+    status_sensor = StatusSensor(
+        device=device, name="System Status", unique_id="status_example_001"
+    )
+
+    # 4. Counter sensor to demonstrate numerical data
+    counter_sensor = create_sensor(
+        device=device,
+        name="Message Count",
+        unique_id="counter_example_001",
+        state_topic="mqtt_publisher/sensors/counter",
+        value_template="{{ value_json.count }}",
+        icon="mdi:counter",
+    )
+
+    # Prepare MQTT configuration
     mqtt_config = {
         "broker_url": config.get("mqtt.broker_url"),
-        "broker_port": config.get("mqtt.broker_port", 1883),
-        "client_id": config.get("mqtt.client_id", "ha_discovery_example"),
-        "security": config.get("mqtt.security", "none"),
-        "auth": config.get("mqtt.auth"),
-        "tls": config.get("mqtt.tls"),
+        "broker_port": config.get("mqtt.broker_port", 8883),
+        "client_id": config.get("mqtt.client_id", "mqtt_publisher_example"),
+        "security": config.get("mqtt.security", "username"),
+        "auth": {
+            "username": config.get("mqtt.auth.username"),
+            "password": config.get("mqtt.auth.password"),
+        },
         "last_will": {
-            "topic": f"{config.get('mqtt.base_topic', 'mqtt_publisher')}/status",
+            "topic": "mqtt_publisher/status",
             "payload": "offline",
             "qos": 1,
             "retain": True,
         },
+        "max_retries": 3,
     }
 
-    # Create device representation
-    device = Device(config)
-
-    # Method 1: Create entities manually
-    entities = []
-
-    # Add status sensor for system health monitoring
-    if config.get("mqtt.topics.status"):
-        entities.append(StatusSensor(config, device))
-
-    # Add custom sensors using the convenience function
-    entities.extend(
-        [
-            create_sensor(
-                config=config,
-                device=device,
-                name="Temperature",
-                unique_id="temperature",
-                state_topic=config.get(
-                    "mqtt.topics.temperature", "sensors/temperature"
-                ),
-                value_template="{{ value_json.temperature }}",
-                unit_of_measurement="°C",
-                device_class="temperature",
-                icon="mdi:thermometer",
-            ),
-            create_sensor(
-                config=config,
-                device=device,
-                name="Humidity",
-                unique_id="humidity",
-                state_topic=config.get("mqtt.topics.humidity", "sensors/humidity"),
-                value_template="{{ value_json.humidity }}",
-                unit_of_measurement="%",
-                device_class="humidity",
-                icon="mdi:water-percent",
-            ),
-            create_sensor(
-                config=config,
-                device=device,
-                name="Data Count",
-                unique_id="data_count",
-                state_topic=config.get("mqtt.topics.data", "sensors/data"),
-                value_template="{{ value_json.items | length }}",
-                json_attributes_topic=config.get("mqtt.topics.data", "sensors/data"),
-                json_attributes_template="{{ value_json | tojson }}",
-                icon="mdi:counter",
-            ),
-        ]
+    print(
+        f"🔗 Connecting to MQTT broker: {mqtt_config['broker_url']}:{mqtt_config['broker_port']}"
     )
 
-    # Publish data and discovery configs
-    with MQTTPublisher(**mqtt_config) as publisher:
-        # Publish discovery configurations
-        publish_discovery_configs(config, publisher, entities, device)
+    try:
+        # Connect to MQTT and publish discovery configurations
+        with MQTTPublisher(**mqtt_config) as publisher:
+            print("✅ Connected to MQTT broker")
 
-        # Publish sample data
-        sample_data = {
-            "temperature": 23.5,
-            "humidity": 65.2,
-            "timestamp": "2025-08-04T12:00:00Z",
-        }
+            # Publish Home Assistant discovery configurations
+            entities = [temp_sensor, humidity_sensor, status_sensor, counter_sensor]
+            publish_discovery_configs(publisher, entities)
+            print(f"📡 Published discovery configurations for {len(entities)} entities")
 
-        temp_topic = config.get("mqtt.topics.temperature", "sensors/temperature")
-        humidity_topic = config.get("mqtt.topics.humidity", "sensors/humidity")
-        data_topic = config.get("mqtt.topics.data", "sensors/data")
-        status_topic = config.get(
-            "mqtt.topics.status",
-            f"{config.get('mqtt.base_topic', 'mqtt_publisher')}/status",
-        )
+            # Publish online status
+            status_sensor.publish_online(publisher)
+            print("🟢 Published online status")
 
-        publisher.publish(temp_topic, sample_data, retain=True)
+            # Simulate publishing sensor data over time
+            counter = 0
+            for i in range(5):
+                counter += 1
+                timestamp = datetime.now().isoformat()
 
-        publisher.publish(
-            humidity_topic,
-            {
-                "humidity": sample_data["humidity"],
-                "timestamp": sample_data["timestamp"],
-            },
-            retain=True,
-        )
+                # Temperature data (simulate varying temperature)
+                temp_data = {
+                    "value": 20.0 + (i * 2.5),
+                    "timestamp": timestamp,
+                    "unit": "°C",
+                }
+                publisher.publish(
+                    "mqtt_publisher/sensors/temperature",
+                    json.dumps(temp_data),
+                    retain=True,
+                )
 
-        publisher.publish(
-            data_topic,
-            {"items": [sample_data], "count": 1, "timestamp": sample_data["timestamp"]},
-            retain=True,
-        )
+                # Humidity data (simulate varying humidity)
+                humidity_data = {
+                    "value": 45 + (i * 5),
+                    "timestamp": timestamp,
+                    "unit": "%",
+                }
+                publisher.publish(
+                    "mqtt_publisher/sensors/humidity",
+                    json.dumps(humidity_data),
+                    retain=True,
+                )
 
-        # Publish status (system healthy)
-        publisher.publish(
-            status_topic,
-            {
-                "status": "ok",
-                "timestamp": sample_data["timestamp"],
-                "message": "System running normally",
-            },
-            retain=True,
-        )
+                # Counter data
+                counter_data = {"count": counter, "timestamp": timestamp}
+                publisher.publish(
+                    "mqtt_publisher/sensors/counter",
+                    json.dumps(counter_data),
+                    retain=True,
+                )
 
-    print("✅ Published sample data and Home Assistant discovery configs")
-    print("🏠 Check your Home Assistant for new sensors under the configured device")
+                print(
+                    f"📊 Published sensor data (iteration {i + 1}/5) - Temp: {temp_data['value']}°C, Humidity: {humidity_data['value']}%"
+                )
+
+                if i < 4:  # Don't sleep after the last iteration
+                    time.sleep(2)  # Wait 2 seconds between updates
+
+            print("🎉 Example completed successfully!")
+            print("\n📋 Check Home Assistant for:")
+            print("   - Device: 'MQTT Publisher Example'")
+            print("   - Sensors: Temperature, Humidity, System Status, Message Count")
+            print(
+                "   - All sensors should show current values and be grouped under the device"
+            )
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        print("\n🔧 Troubleshooting:")
+        print("   1. Check MQTT broker is running and accessible")
+        print("   2. Verify credentials in config/config.yaml")
+        print("   3. Ensure environment variables are set correctly")
+        print("   4. Check network connectivity to MQTT broker")
+        return
 
 
 if __name__ == "__main__":

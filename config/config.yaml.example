@@ -1,33 +1,44 @@
-# MQTT Configuration
-mqtt:
-  broker_url: "your_broker_url"
-  broker_port:
-    8883 # Standard MQTT ports:
-    # 1883 : MQTT (unencrypted)
-    # 8883 : MQTT over TLS/SSL
-    # 8884 : MQTT over TLS/SSL (client certificate)
-  client_id: "your_client_id"
+# MQTT Configuration Example
+# Copy this file to config.yaml and update with your actual settings
+# Supports environment variable substitution using ${VARIABLE} syntax
 
-  # Connection security: choose one of:
-  # - 'none': No security (typically port 1883)
-  # - 'username': Username/password only (typically port 1883)
-  # - 'tls': TLS without client authentication (typically port 8883)
-  # - 'tls_with_client_cert': TLS with client certificate (typically port 8884)
+mqtt:
+  # Broker connection settings
+  broker_url: "${MQTT_BROKER_URL}"      # Environment variable: your-broker.example.com
+  broker_port: 8883                     # Standard ports: 1883 (plain), 8883 (TLS), 8884 (TLS+cert)
+  client_id: "${MQTT_CLIENT_ID}"        # Environment variable: unique client identifier
+
+  # Security configuration - choose one:
+  # - "none": No authentication (typically port 1883)
+  # - "username": Username/password only (any port)
+  # - "tls": TLS encryption + username/password (typically port 8883)
+  # - "tls_with_client_cert": TLS + client certificates (typically port 8884)
   security: "username"
 
-  # Authentication settings
+  # Authentication settings (required for username, tls, tls_with_client_cert)
   auth:
-    username: "your_username"
-    password: "your_password"
+    username: "${MQTT_USERNAME}"        # Environment variable
+    password: "${MQTT_PASSWORD}"        # Environment variable
 
-  # TLS settings
+  # TLS settings (required for tls, tls_with_client_cert)
   tls:
-    ca_cert: null # Path to CA certificate
-    client_cert: null # Path to client certificate (if needed)
-    client_key: null # Path to client key (if needed)
-    verify: false # Verify broker's certificate
+    ca_cert: null                       # Path to CA certificate file
+    client_cert: null                   # Path to client certificate file (for tls_with_client_cert)
+    client_key: null                    # Path to client key file (for tls_with_client_cert)
+    verify: false                       # Verify broker's certificate (set true for production)
 
-  topics:
+  # Last Will and Testament (optional)
+  last_will:
+    topic: "your_device/status"         # Topic for offline message
+    payload: "offline"                  # Message when client disconnects unexpectedly
+    qos: 1                             # Quality of Service (0, 1, or 2)
+    retain: true                       # Retain the last will message
+
+# Example MQTT topics structure
+topics:
+  base: "your_device"                  # Base topic prefix
+  status: "your_device/status"         # Status topic
+  data: "your_device/data"            # Data topic
     next: "your_topic/next"
     all_upcoming: "your_topic/all_upcoming"
   last_will:

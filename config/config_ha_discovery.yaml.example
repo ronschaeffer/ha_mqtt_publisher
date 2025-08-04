@@ -10,19 +10,19 @@ app:
 
 # MQTT Configuration
 mqtt:
-  broker_url: "your_broker_url"
+  broker_url: "${MQTT_BROKER_URL}" # Environment variable
   broker_port: 8883
-  client_id: "mqtt_publisher_ha_discovery"
+  client_id: "${MQTT_CLIENT_ID}" # Environment variable
   base_topic: "mqtt_publisher"
-  security: "username"  # Options: none, username, tls, tls_with_client_cert
+  security: "username" # Options: none, username, tls, tls_with_client_cert
   auth:
-    username: "your_username"
-    password: "your_password"
+    username: "${MQTT_USERNAME}" # Environment variable
+    password: "${MQTT_PASSWORD}" # Environment variable
   tls:
-    ca_cert: null  # Path to CA certificate
-    client_cert: null  # Path to client certificate
-    client_key: null  # Path to client key
-    verify: false  # Set to true in production
+    ca_cert: null # Path to CA certificate
+    client_cert: null # Path to client certificate
+    client_key: null # Path to client key
+    verify: false # Set to true in production
   topics:
     status: "mqtt_publisher/status"
     temperature: "mqtt_publisher/sensors/temperature"

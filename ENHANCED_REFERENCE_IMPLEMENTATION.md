@@ -26,6 +26,7 @@ mqtt_publisher/
 ## 🚀 Key Enhancements
 
 ### **1. Professional MQTT Engine**
+
 - ✅ **Retry logic** with configurable attempts
 - ✅ **Comprehensive logging** (DEBUG/INFO/ERROR levels)
 - ✅ **Last Will Testament** support
@@ -34,6 +35,7 @@ mqtt_publisher/
 - ✅ **Connection state** tracking
 
 ### **2. Home Assistant Discovery Framework**
+
 - ✅ **Object-oriented** entity system
 - ✅ **Device grouping** for logical organization
 - ✅ **Rich entity attributes** (icons, units, templates)
@@ -42,6 +44,7 @@ mqtt_publisher/
 - ✅ **Discovery payload** management
 
 ### **3. Enhanced Configuration**
+
 - ✅ **Dot notation** support (`config.get("mqtt.broker_url")`)
 - ✅ **Nested key access** (`config.mqtt_broker_url`)
 - ✅ **Default value** handling
@@ -51,18 +54,19 @@ mqtt_publisher/
 
 ### **From Basic Implementation To Professional Grade**
 
-| Feature | Before | After |
-|---------|--------|-------|
-| **Error Handling** | Basic print statements | Professional logging with levels |
-| **Connection Management** | Simple connect/disconnect | Retry logic + state tracking |
-| **HA Discovery** | Manual topic/payload creation | Object-oriented framework |
-| **Configuration** | Simple key access | Dot notation + nested support |
-| **Status Monitoring** | None | Built-in binary sensor |
-| **Testing** | Limited | Comprehensive test suite |
+| Feature                   | Before                        | After                            |
+| ------------------------- | ----------------------------- | -------------------------------- |
+| **Error Handling**        | Basic print statements        | Professional logging with levels |
+| **Connection Management** | Simple connect/disconnect     | Retry logic + state tracking     |
+| **HA Discovery**          | Manual topic/payload creation | Object-oriented framework        |
+| **Configuration**         | Simple key access             | Dot notation + nested support    |
+| **Status Monitoring**     | None                          | Built-in binary sensor           |
+| **Testing**               | Limited                       | Comprehensive test suite         |
 
 ## 🎮 Usage Examples
 
 ### **Simple MQTT Publishing**
+
 ```python
 from mqtt_publisher.publisher import MQTTPublisher
 
@@ -71,6 +75,7 @@ with MQTTPublisher(broker_url="localhost", broker_port=1883, client_id="test") a
 ```
 
 ### **Home Assistant Integration**
+
 ```python
 from ha_discovery import Device, create_sensor, publish_discovery_configs
 from mqtt_publisher.config import Config
@@ -87,6 +92,7 @@ with MQTTPublisher(**mqtt_config) as publisher:
 ## 🔄 Migration Path for Existing Projects
 
 ### **Step 1: Update Imports**
+
 ```python
 # OLD (twickenham_events)
 from core.mqtt_publisher import MQTTPublisher
@@ -98,6 +104,7 @@ from ha_discovery import publish_discovery_configs
 ```
 
 ### **Step 2: Update Configuration**
+
 ```python
 # OLD
 config.get("mqtt.broker_url")
@@ -108,6 +115,7 @@ config.get("mqtt_broker_url")      # Also works
 ```
 
 ### **Step 3: Enhanced Logging**
+
 ```python
 # OLD
 print(f"Connected to {broker_url}")
@@ -131,21 +139,22 @@ logging.info("Connected to MQTT broker at %s:%d", broker_url, broker_port)
 
 ## 📊 Comparison Summary
 
-| Aspect | `twickenham_events` | `mqtt_publisher` (Enhanced) |
-|--------|-------------------|----------------------------|
-| **MQTT Engine** | Basic (118 lines) | ✅ Professional (175 lines) |
-| **HA Discovery** | ✅ Sophisticated | ✅ **Same + Enhanced** |
-| **Error Handling** | Basic prints | ✅ Professional logging |
-| **Retry Logic** | None | ✅ Configurable retries |
-| **Status Monitoring** | ✅ Binary sensor | ✅ **Same framework** |
-| **Configuration** | Basic dot notation | ✅ **Enhanced + backward compatible** |
-| **Documentation** | Project-specific | ✅ **Generic + comprehensive** |
-| **Testing** | Project tests | ✅ **Framework tests** |
-| **Reusability** | Project-specific | ✅ **Designed for reuse** |
+| Aspect                | `twickenham_events` | `mqtt_publisher` (Enhanced)           |
+| --------------------- | ------------------- | ------------------------------------- |
+| **MQTT Engine**       | Basic (118 lines)   | ✅ Professional (175 lines)           |
+| **HA Discovery**      | ✅ Sophisticated    | ✅ **Same + Enhanced**                |
+| **Error Handling**    | Basic prints        | ✅ Professional logging               |
+| **Retry Logic**       | None                | ✅ Configurable retries               |
+| **Status Monitoring** | ✅ Binary sensor    | ✅ **Same framework**                 |
+| **Configuration**     | Basic dot notation  | ✅ **Enhanced + backward compatible** |
+| **Documentation**     | Project-specific    | ✅ **Generic + comprehensive**        |
+| **Testing**           | Project tests       | ✅ **Framework tests**                |
+| **Reusability**       | Project-specific    | ✅ **Designed for reuse**             |
 
 ## ✅ Verification
 
 ### **Imports Work:**
+
 ```python
 ✅ from ha_discovery import Device, StatusSensor, create_sensor, publish_discovery_configs
 ✅ from mqtt_publisher.publisher import MQTTPublisher
@@ -153,6 +162,7 @@ logging.info("Connected to MQTT broker at %s:%d", broker_url, broker_port)
 ```
 
 ### **Code Quality:**
+
 ```bash
 ✅ 5 files reformatted, 17 files left unchanged (Ruff)
 ✅ All linting issues resolved
