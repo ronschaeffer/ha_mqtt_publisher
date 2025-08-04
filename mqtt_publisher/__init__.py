@@ -5,7 +5,7 @@ __author__ = "ronschaeffer"
 __email__ = "ron@ronschaeffer.com"
 
 # Import main components for easy access
-from .config import Config
+from .config import Config, MQTTConfig
 
 # Import HA discovery components
 from .ha_discovery import (
@@ -21,6 +21,7 @@ __all__ = [
     "Config",
     "Device",
     "Entity",
+    "MQTTConfig",
     "MQTTPublisher",
     "Sensor",
     "StatusSensor",
