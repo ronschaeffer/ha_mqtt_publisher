@@ -37,19 +37,43 @@ poetry install
 
 ## ⚙️ Configuration
 
-### Environment Variables (Recommended)
-Create a `.env` file in your project root:
+### Environment Variables Setup
+
+This project supports **hierarchical environment variable loading** for flexible configuration management:
+
+1. **Shared environment** (recommended): Create `/home/ron/projects/.env` with shared MQTT settings
+2. **Project-specific overrides**: Create `.env` in project root for project-specific settings
+3. **System environment**: System variables have highest priority
+
+#### Shared Environment Example (`/home/ron/projects/.env`):
 ```bash
-# MQTT Broker Configuration
-MQTT_BROKER_URL=your-broker.example.com
+# Shared MQTT configuration across all projects
+MQTT_BROKER_URL=10.10.10.21
+MQTT_BROKER_PORT=8883
 MQTT_USERNAME=your_mqtt_username
 MQTT_PASSWORD=your_mqtt_password
-MQTT_CLIENT_ID=your_unique_client_id
-
-# Optional settings
-MQTT_BROKER_PORT=8883
-MQTT_USE_TLS=true
 ```
+
+#### Project-Specific Environment (`.env`):
+```bash
+# Project-specific client ID (overrides shared settings)
+MQTT_CLIENT_ID=mqtt_publisher_client_001
+
+# Add project-specific variables here
+DEBUG=false
+LOG_LEVEL=INFO
+```
+
+#### Environment Loading
+The configuration automatically loads environment variables using this hierarchy:
+1. Load shared parent environment (`/home/ron/projects/.env`)
+2. Load project environment (`.env`) - overrides shared values
+3. System environment variables - highest priority
+
+#### Quick Setup
+1. Copy the example: `cp .env.example .env`
+2. Edit `.env` with your actual values
+3. The configuration automatically uses environment variables with `${VARIABLE_NAME}` syntax
 
 ### Configuration File
 Create `config/config.yaml` based on `config/config.yaml.example`:
