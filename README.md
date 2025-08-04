@@ -1,6 +1,10 @@
 # MQTT Publisher
 
-A professional-grade MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides both a robust MQTT publishing engine and a comprehensive framework for creating Home Assistant auto-discovery configurations.
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+An MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides both an MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
 
 ## ✨ Features
 
@@ -119,7 +123,7 @@ mqtt:
     password: "${MQTT_PASSWORD}" # MQTT password
 ```
 
-### MQTT Security Options
+### 🔧 MQTT Security Options
 
 Choose the appropriate security configuration:
 
@@ -130,13 +134,13 @@ Choose the appropriate security configuration:
 | `tls`                  | 8883      | TLS encryption + auth     | Production (recommended) |
 | `tls_with_client_cert` | 8884      | TLS + client certificates | High security            |
 
-### Common MQTT Ports
+### 🌐 Common MQTT Ports
 
 - **1883**: Standard MQTT (unencrypted)
 - **8883**: MQTT over TLS/SSL (encrypted)
 - **8884**: MQTT over TLS/SSL with client certificates
 
-#### Quick Setup
+#### ⚡ Quick Setup
 
 1. Copy the example: `cp .env.example .env`
 2. Edit `.env` with your actual values
@@ -181,14 +185,6 @@ mqtt:
     payload: "your_last_will_payload"
     qos: 1
     retain: true
-```
-
-## Usage
-
-### Basic MQTT Publishing
-
-```python
-from mqtt_publisher.publisher import MQTTPublisher
 ```
 
 ## 🚀 Usage
@@ -389,73 +385,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For questions, issues, or contributions, please open an issue on GitHub.
-
----
-
-For questions, issues, or contributions, please open an issue on GitHub.
-
-# Create device and sensors
-
-device = Device(config)
-sensors = [
-create_sensor(
-config=config,
-device=device,
-name="Temperature",
-unique_id="temperature",
-state_topic="sensors/temperature",
-value_template="{{ value_json.temperature }}",
-unit_of_measurement="°C",
-device_class="temperature",
-icon="mdi:thermometer"
-)
-]
-
-# Publish discovery configurations and data
-
-with MQTTPublisher(\*\*mqtt_config) as publisher:
-publish_discovery_configs(config, publisher, sensors, device)
-publisher.publish("sensors/temperature", {"temperature": 23.5})
-
-````
-
-### Custom Entity Configuration
-
-```python
-from ha_discovery import Device, StatusSensor, Sensor
-
-# Create device
-device = Device(config)
-
-# Create status sensor for system health
-status_sensor = StatusSensor(config, device)
-
-# Create custom sensor with rich configuration
-custom_sensor = Sensor(
-    config=config,
-    device=device,
-    name="System Load",
-    unique_id="system_load",
-    state_topic="system/load",
-    value_template="{{ value_json.load_1m }}",
-    json_attributes_topic="system/load",
-    json_attributes_template="{{ value_json | tojson }}",
-    unit_of_measurement="%",
-    icon="mdi:speedometer"
-)
-
-entities = [status_sensor, custom_sensor]
-publish_discovery_configs(config, publisher, entities, device)
-````
-
-## Running Tests
-
-To run the tests, use the following command:
-
-```sh
-poetry run pytest
-```
-
-## License
-
-This project is licensed under the MIT License.
