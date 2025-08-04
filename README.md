@@ -1,6 +1,6 @@
 # MQTT Publisher
 
-A Python MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides an MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
+A professional-grade MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides both a robust MQTT publishing engine and a comprehensive framework for creating Home Assistant auto-discovery configurations.
 
 ## ✨ Features
 
@@ -150,7 +150,7 @@ Create `config/config.yaml` based on `config/config.yaml.example`:
 # MQTT Configuration with environment variable support
 mqtt:
   broker_url: "${MQTT_BROKER_URL}"
-  broker_port: 8883
+  broker_port: "${MQTT_BROKER_PORT}"
   client_id: "${MQTT_CLIENT_ID}"
   security: "username"  # Options: "none", "username", "tls", "tls_with_client_cert"
 
@@ -201,7 +201,7 @@ from mqtt_publisher.publisher import MQTTPublisher
 # Configuration
 config = {
     "broker_url": "your-broker.example.com",
-    "broker_port": 8883,
+    "broker_port": "your_broker-port",
     "client_id": "your_client_id",
     "security": "username",
     "auth": {
