@@ -4,9 +4,9 @@
 
 mqtt:
   # Broker connection settings
-  broker_url: "${MQTT_BROKER_URL}"      # Environment variable: your-broker.example.com
-  broker_port: "${MQTT_BROKER_PORT}"    # Environment variable: 1883 (plain), 8883 (TLS), 8884 (TLS+cert)
-  client_id: "${MQTT_CLIENT_ID}"        # Environment variable: unique client identifier
+  broker_url: "${MQTT_BROKER_URL}" # Environment variable: your-broker.example.com
+  broker_port: "${MQTT_BROKER_PORT}" # Environment variable: 1883 (plain), 8883 (TLS), 8884 (TLS+cert)
+  client_id: "${MQTT_CLIENT_ID}" # Environment variable: unique client identifier
 
   # Security configuration - choose one:
   # - "none": No authentication (typically port 1883)
@@ -17,32 +17,27 @@ mqtt:
 
   # Authentication settings (required for username, tls, tls_with_client_cert)
   auth:
-    username: "${MQTT_USERNAME}"        # Environment variable
-    password: "${MQTT_PASSWORD}"        # Environment variable
+    username: "${MQTT_USERNAME}" # Environment variable
+    password: "${MQTT_PASSWORD}" # Environment variable
 
   # TLS settings (required for tls, tls_with_client_cert)
   tls:
-    ca_cert: null                       # Path to CA certificate file
-    client_cert: null                   # Path to client certificate file (for tls_with_client_cert)
-    client_key: null                    # Path to client key file (for tls_with_client_cert)
-    verify: false                       # Verify broker's certificate (set true for production)
+    ca_cert: null # Path to CA certificate file
+    client_cert: null # Path to client certificate file (for tls_with_client_cert)
+    client_key: null # Path to client key file (for tls_with_client_cert)
+    verify: false # Verify broker's certificate (set true for production)
 
   # Last Will and Testament (optional)
   last_will:
-    topic: "your_device/status"         # Topic for offline message
-    payload: "offline"                  # Message when client disconnects unexpectedly
-    qos: 1                             # Quality of Service (0, 1, or 2)
-    retain: true                       # Retain the last will message
+    topic: "your_device/status" # Topic for offline message
+    payload: "offline" # Message when client disconnects unexpectedly
+    qos: 1 # Quality of Service (0, 1, or 2)
+    retain: true # Retain the last will message
 
 # Example MQTT topics structure
 topics:
-  base: "your_device"                  # Base topic prefix
-  status: "your_device/status"         # Status topic
-  data: "your_device/data"            # Data topic
-    next: "your_topic/next"
-    all_upcoming: "your_topic/all_upcoming"
-  last_will:
-    topic: "your_last_will_topic"
-    payload: "your_last_will_payload"
-    qos: 1
-    retain: true
+  base: "your_device" # Base topic prefix
+  status: "your_device/status" # Status topic
+  data: "your_device/data" # Data topic
+  next: "your_device/next" # Next event topic
+  all_upcoming: "your_device/all_upcoming" # All upcoming events topic

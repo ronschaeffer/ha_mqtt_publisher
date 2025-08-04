@@ -1,25 +1,25 @@
 # MQTT Publisher
 
-A professional-grade MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides both a robust MQTT publishing engine and a comprehensive framework for creating Home Assistant auto-discovery configurations.
+A Python MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides an MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
 
 ## ✨ Features
 
 ### 🚀 MQTT Publishing Engine
 
-- **Robust Connection Management** with retry logic and exponential backoff
+- **Connection Management** with retry logic and exponential backoff
 - **Multiple Security Modes**: None, Username/Password, TLS, TLS with client certificates
 - **Context Manager Support** for automatic resource cleanup
 - **Last Will and Testament (LWT)** support for offline detection
-- **Professional Logging** with configurable levels and detailed error reporting
+- **Configurable Logging** with multiple levels and detailed error reporting
 - **Connection State Tracking** with timeout handling
 
 ### 🏠 Home Assistant Integration
 
-- **Complete MQTT Discovery Framework**: Object-oriented system for creating HA entities
-- **Device Grouping**: Automatically groups sensors under logical devices
-- **Status Monitoring**: Built-in binary sensor for system health monitoring
-- **Rich Entity Support**: Sensors with templates, units, device classes, and icons
-- **Automatic Configuration Publishing**: Handles discovery topic generation and payload creation
+- **MQTT Discovery Framework**: Object-oriented system for creating HA entities
+- **Device Grouping**: Groups sensors under logical devices
+- **Status Monitoring**: Binary sensor for system health monitoring
+- **Entity Support**: Sensors with templates, units, device classes, and icons
+- **Configuration Publishing**: Handles discovery topic generation and payload creation
 
 ## 📦 Installation
 
@@ -44,40 +44,97 @@ poetry install
 
 ### Environment Variables Setup
 
-This project supports **hierarchical environment variable loading** for flexible configuration management:
+This project supports **optional hierarchical environment variable loading** for flexible configuration management. You can use any of these approaches:
 
-1. **Shared environment** (recommended): Create `/home/ron/projects/.env` with shared MQTT settings
+**Option 1: Direct Configuration** - Edit `config/config.yaml` with your values
+**Option 2: Environment Variables** - Use `.env` files or system environment
+**Option 3: Hierarchical Loading** - Combine shared and project-specific settings
+
+#### Option 1: Direct Configuration
+
+Copy and edit the configuration file:
+
+```bash
+cp config/config.yaml.example config/config.yaml
+# Edit config/config.yaml with your actual values
+```
+
+#### Option 2: Environment Variables
+
+Set these environment variables (via `.env` file or system):
+
+```bash
+# Required MQTT settings
+MQTT_BROKER_URL=your-broker.example.com
+MQTT_BROKER_PORT=8883
+MQTT_CLIENT_ID=your_unique_client_id
+MQTT_USERNAME=your_mqtt_username
+MQTT_PASSWORD=your_mqtt_password
+```
+
+#### Option 3: Hierarchical Environment Loading
+
+For multi-project workspaces, you can use hierarchical loading:
+
+1. **Shared environment** (optional): Create `../shared/.env` with common MQTT settings
 2. **Project-specific overrides**: Create `.env` in project root for project-specific settings
 3. **System environment**: System variables have highest priority
 
-#### Shared Environment Example (`/home/ron/projects/.env`):
+**Shared Environment Example** (`../shared/.env`):
 
 ```bash
 # Shared MQTT configuration across all projects
-MQTT_BROKER_URL=10.10.10.21
+MQTT_BROKER_URL=your-broker.example.com
 MQTT_BROKER_PORT=8883
 MQTT_USERNAME=your_mqtt_username
 MQTT_PASSWORD=your_mqtt_password
 ```
 
-#### Project-Specific Environment (`.env`):
+**Project-Specific Environment** (`.env`):
 
 ```bash
 # Project-specific client ID (overrides shared settings)
 MQTT_CLIENT_ID=mqtt_publisher_client_001
 
-# Add project-specific variables here
+# Project-specific overrides (if needed)
+# MQTT_BROKER_URL=different-broker.example.com
 DEBUG=false
 LOG_LEVEL=INFO
 ```
 
-#### Environment Loading
+### Configuration File
 
-The configuration automatically loads environment variables using this hierarchy:
+The configuration supports environment variable substitution using `${VARIABLE}` syntax:
 
-1. Load shared parent environment (`/home/ron/projects/.env`)
-2. Load project environment (`.env`) - overrides shared values
-3. System environment variables - highest priority
+```yaml
+# MQTT Configuration with environment variable substitution
+mqtt:
+  broker_url: "${MQTT_BROKER_URL}" # your-broker.example.com
+  broker_port: "${MQTT_BROKER_PORT}" # 8883, 1883, etc.
+  client_id: "${MQTT_CLIENT_ID}" # unique client identifier
+  security: "username" # none, username, tls, tls_with_client_cert
+
+  auth:
+    username: "${MQTT_USERNAME}" # MQTT username
+    password: "${MQTT_PASSWORD}" # MQTT password
+```
+
+### MQTT Security Options
+
+Choose the appropriate security configuration:
+
+| Security Mode          | Port      | Description               | Use Case                 |
+| ---------------------- | --------- | ------------------------- | ------------------------ |
+| `none`                 | 1883      | No authentication         | Testing/development      |
+| `username`             | 1883/8883 | Username/password only    | Basic authentication     |
+| `tls`                  | 8883      | TLS encryption + auth     | Production (recommended) |
+| `tls_with_client_cert` | 8884      | TLS + client certificates | High security            |
+
+### Common MQTT Ports
+
+- **1883**: Standard MQTT (unencrypted)
+- **8883**: MQTT over TLS/SSL (encrypted)
+- **8884**: MQTT over TLS/SSL with client certificates
 
 #### Quick Setup
 
@@ -257,9 +314,9 @@ with MQTTPublisher(**mqtt_config) as publisher:
     status_sensor.publish_online(publisher)
 ```
 
-## 📖 Complete Example
+## 📖 Usage Example
 
-See [`examples/ha_discovery_complete_example.py`](examples/ha_discovery_complete_example.py) for a comprehensive example showing:
+See [`examples/ha_discovery_complete_example.py`](examples/ha_discovery_complete_example.py) for an example showing:
 
 - Environment variable configuration
 - Device and sensor creation
@@ -335,7 +392,7 @@ For questions, issues, or contributions, please open an issue on GitHub.
 
 ---
 
-**Built with ❤️ for the IoT and Home Assistant community**
+For questions, issues, or contributions, please open an issue on GitHub.
 
 # Create device and sensors
 
@@ -362,7 +419,7 @@ publisher.publish("sensors/temperature", {"temperature": 23.5})
 
 ````
 
-### Advanced: Custom Entity Configuration
+### Custom Entity Configuration
 
 ```python
 from ha_discovery import Device, StatusSensor, Sensor

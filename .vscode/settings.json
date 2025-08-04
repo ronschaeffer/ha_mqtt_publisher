@@ -26,7 +26,13 @@
         "**/*.pyc": true
     },
     "terminal.integrated.env.linux": {
-        "PYTHONPATH": "${workspaceFolder}"
+        "PYTHONPATH": "${workspaceFolder}",
+        "LC_ALL": "C.UTF-8",
+        "LANG": "C.UTF-8"
     },
-    "terminal.integrated.cwd": "${workspaceFolder}"
+    "terminal.integrated.cwd": "${workspaceFolder}",
+    "git.env": {
+        "LC_ALL": "C.UTF-8",
+        "LANG": "C.UTF-8"
+    }
 }
