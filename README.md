@@ -1,12 +1,29 @@
 # MQTT Publisher
 
+[![PyPI version](https://badge.fury.io/py/ronschaeffer-mqtt-publisher.svg)](https://badge.fury.io/py/ronschaeffer-mqtt-publisher)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![CI](https://github.com/ronschaeffer/mqtt_publisher/workflows/CI/badge.svg)](https://github.com/ronschaeffer/mqtt_publisher/actions)
 
 An MQTT publishing library with **MQTT 5.0 support** and integrated **Home Assistant MQTT Discovery**. This package provides both a modern MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
 
+## 📋 Table of Contents
+
+- [🚀 Quick Start](#-quick-start)
+- [📦 Installation](#-installation)
+- [✨ Features](#-features)
+- [⚙️ Configuration](#️-configuration)
+- [🏠 Home Assistant Integration](#-home-assistant-integration)
+- [📖 Usage Examples](#-usage-examples)
+- [🧪 Testing](#-testing)
+- [📄 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [📞 Support](#-support)
+
 ## 🚀 Quick Start
+
+### Basic Usage
 
 ```python
 from mqtt_publisher import MQTTConfig, MQTTPublisher
@@ -28,6 +45,19 @@ with MQTTPublisher(config=config) as publisher:
         "value": 23.5,
         "unit": "°C"
     }, retain=True)
+```
+
+### Installation Verification
+
+After installation, verify everything works:
+
+```python
+import mqtt_publisher
+print(f"MQTT Publisher version: {mqtt_publisher.__version__}")
+
+# Test imports
+from mqtt_publisher import MQTTPublisher, Device, create_sensor
+print("✅ All imports successful!")
 ```
 
 ## ✨ Features
@@ -57,18 +87,29 @@ with MQTTPublisher(config=config) as publisher:
 
 ## 📦 Installation
 
-### Option 1: Git Dependency (Recommended)
+### From PyPI (Recommended)
 
-Add to your `pyproject.toml`:
-
-```toml
-[tool.poetry.dependencies]
-mqtt-publisher = {git = "https://github.com/ronschaeffer/mqtt_publisher.git"}
-```
-
-### Option 2: Local Development
+Install the latest stable release from PyPI:
 
 ```bash
+pip install ronschaeffer-mqtt-publisher
+```
+
+Or with Poetry:
+
+```bash
+poetry add ronschaeffer-mqtt-publisher
+```
+
+### Development Installation
+
+For the latest development version or to contribute:
+
+```bash
+# Option 1: Install from GitHub
+pip install git+https://github.com/ronschaeffer/mqtt_publisher.git
+
+# Option 2: Clone and install locally
 git clone https://github.com/ronschaeffer/mqtt_publisher.git
 cd mqtt_publisher
 poetry install
@@ -76,9 +117,15 @@ poetry install
 
 ## ⚙️ Configuration
 
+### Quick Setup
+
+1. **Install the package**: `pip install ronschaeffer-mqtt-publisher`
+2. **Set environment variables** or **edit config file**
+3. **Import and use** in your Python code
+
 ### Environment Variables Setup
 
-This project supports **optional hierarchical environment variable loading** for flexible configuration management. You can use any of these approaches:
+This project supports **flexible configuration management** with multiple options:
 
 **Option 1: Direct Configuration** - Edit `config/config.yaml` with your values
 **Option 2: Environment Variables** - Use `.env` files or system environment
@@ -496,7 +543,34 @@ MQTTPublisher(
 )
 ```
 
+## 📖 Usage Examples
+
+### Basic MQTT Publishing
+
+```python
+from mqtt_publisher import MQTTPublisher
+
+# Simple connection and publish
+with MQTTPublisher(
+    broker_url="mqtt.home.local",
+    broker_port=8883,
+    client_id="my_sensor",
+    security="username",
+    auth={"username": "user", "password": "pass"}
+) as publisher:
+    # Publish simple message
+    publisher.publish("sensors/temperature", "23.5")
+    
+    # Publish JSON data
+    publisher.publish("sensors/humidity", {
+        "value": 65.0,
+        "timestamp": "2025-08-05T12:00:00Z"
+    }, retain=True)
+```
+
 ### Home Assistant Discovery
+
+Create auto-discovered devices and sensors in Home Assistant:
 
 The discovery framework automatically:
 
@@ -508,13 +582,31 @@ The discovery framework automatically:
 
 ## 📚 Examples
 
-### Complete Examples
+## 📚 Examples
 
-See the `examples/` directory for comprehensive examples:
+### Complete Examples Directory
 
-- **`enhanced_features_example.py`** - Demonstrates enhanced configuration features
-- **`ha_discovery_complete_example.py`** - Full Home Assistant discovery setup
-- **`config/config.yaml.example`** - Complete configuration template
+The `examples/` directory contains comprehensive examples:
+
+- **[`enhanced_features_example.py`](examples/enhanced_features_example.py)** - Demonstrates configuration features and validation
+- **[`ha_discovery_complete_example.py`](examples/ha_discovery_complete_example.py)** - Full Home Assistant discovery setup
+- **[`config/`](config/)** - Configuration templates and examples
+
+### Running Examples
+
+```bash
+# Install with examples dependencies
+pip install ronschaeffer-mqtt-publisher
+
+# Set up configuration
+cp config/config.yaml.example config/config.yaml
+cp .env.example .env
+# Edit these files with your MQTT broker settings
+
+# Run examples
+python examples/enhanced_features_example.py
+python examples/ha_discovery_complete_example.py
+```
 
 ### Real-World Usage Patterns
 
@@ -565,18 +657,105 @@ Run with coverage:
 poetry run pytest --cov=mqtt_publisher --cov-report=html
 ```
 
+## 📋 Changelog
+
+### Latest Release (v0.1.2)
+
+- ✅ **PyPI Publication**: Now available on PyPI as `ronschaeffer-mqtt-publisher`
+- ✅ **Enhanced API**: Added `create_sensor` and `create_status_sensor` to main imports
+- ✅ **Version Automation**: Automated versioning with GitHub Actions
+- ✅ **Improved Examples**: Fixed and enhanced example scripts
+- ✅ **Better Documentation**: Comprehensive README and configuration guides
+- ✅ **Test Coverage**: Expanded test suite with 87 tests and 77% coverage
+
+See [GitHub Releases](https://github.com/ronschaeffer/mqtt_publisher/releases) for complete changelog.
+
+## 🔄 Version Management
+
+This project uses automated semantic versioning:
+
+- **Patch releases**: Bug fixes, documentation updates
+- **Minor releases**: New features, backward compatible
+- **Major releases**: Breaking changes
+
+Install specific versions:
+
+```bash
+# Latest stable
+pip install ronschaeffer-mqtt-publisher
+
+# Specific version
+pip install ronschaeffer-mqtt-publisher==0.1.2
+
+# Latest development
+pip install git+https://github.com/ronschaeffer/mqtt_publisher.git
+```
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🤝 Contributing
 
+We welcome contributions! Here's how to get started:
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/ronschaeffer/mqtt_publisher.git
+cd mqtt_publisher
+
+# Install with development dependencies
+poetry install
+
+# Set up pre-commit hooks (optional)
+poetry run pre-commit install
+
+# Run tests
+poetry run pytest
+```
+
+### Contribution Process
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Ensure tests pass: `poetry run pytest`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+### Development Guidelines
+
+- **Testing**: All new features must include tests
+- **Documentation**: Update README and docstrings for new features
+- **Code Style**: Use Ruff for formatting (`poetry run ruff format`)
+- **Versioning**: Use semantic versioning for releases
 
 ## 📞 Support
 
-For questions, issues, or contributions, please open an issue on GitHub.
+### Getting Help
+
+- **GitHub Issues**: [Report bugs or request features](https://github.com/ronschaeffer/mqtt_publisher/issues)
+- **Discussions**: [Community discussions and Q&A](https://github.com/ronschaeffer/mqtt_publisher/discussions)
+- **Documentation**: [Examples and configuration guides](examples/)
+
+### Reporting Issues
+
+When reporting issues, please include:
+- Python version and OS
+- MQTT broker type and version
+- Complete error messages
+- Minimal reproduction code
+
+### Feature Requests
+
+We welcome feature requests! Please:
+- Check existing issues first
+- Describe the use case clearly
+- Provide examples of desired API
+
+---
+
+**Made with ❤️ for the IoT and Home Assistant community**
