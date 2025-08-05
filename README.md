@@ -73,6 +73,21 @@ cd mqtt_publisher
 poetry install
 ```
 
+## 🔄 Version 2.1 Update
+
+**MQTT Publisher now uses paho-mqtt 2.1.0** with full VERSION2 API for enhanced MQTT 5.0 support.
+
+### What Changed
+- ✅ **Updated to paho-mqtt 2.1.0** from 1.6.1
+- ✅ **Full VERSION2 API** - Complete migration with enhanced callback signatures
+- ✅ **MQTT 5.0 support** - Access to properties, reason codes, and enhanced features
+- ✅ **Enhanced type safety** with ReasonCode objects and better boolean handling
+- ✅ **Python 3.12 compatibility** and performance improvements
+- ✅ **Improved error handling** with detailed reason codes
+
+### For Existing Users
+No code changes required! Your existing code will continue to work exactly as before. The library handles all compatibility internally while providing access to the latest paho-mqtt improvements.
+
 ## ⚙️ Configuration
 
 ### Environment Variables Setup

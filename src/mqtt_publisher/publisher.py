@@ -142,7 +142,9 @@ class MQTTPublisher:
         assert self.broker_url is not None, "broker_url validated to be not None"
         assert self.client_id is not None, "client_id validated to be not None"
 
-        self.client = mqtt.Client(client_id=self.client_id)
+        self.client = mqtt.Client(
+            mqtt.CallbackAPIVersion.VERSION2, client_id=self.client_id
+        )
 
         # Configure Last Will and Testament
         if last_will:
@@ -179,8 +181,13 @@ class MQTTPublisher:
         self.client.on_disconnect = self._on_disconnect
         self.client.on_publish = self._on_publish
 
-    def _get_connection_error_message(self, error_code: int) -> str:
+    def _get_connection_error_message(self, error_code) -> str:
         """Provide helpful error messages for common connection issues."""
+        # Handle both integer (v1) and ReasonCode (v2) formats
+        error_code_int = (
+            int(error_code) if hasattr(error_code, "__int__") else error_code
+        )
+
         error_messages = {
             0: "Connection successful",
             1: "Connection refused - incorrect protocol version",
@@ -191,11 +198,11 @@ class MQTTPublisher:
         }
 
         base_message = error_messages.get(
-            error_code, f"Connection failed with error code: {error_code}"
+            error_code_int, f"Connection failed with error code: {error_code}"
         )
 
         # Add specific guidance for common misconfigurations
-        if error_code == 1:  # Connection refused
+        if error_code_int == 1:  # Connection refused
             if self.tls and self.broker_port == 1883:
                 return f"{base_message}. TLS enabled but using non-TLS port 1883. Try port 8883."
             elif not self.tls and self.broker_port == 8883:
@@ -203,20 +210,20 @@ class MQTTPublisher:
 
         return base_message
 
-    def _on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
+    def _on_connect(self, client, userdata, flags, reason_code, properties):
+        if reason_code == 0:
             self._connected = True
             logging.info("Connected to MQTT broker")
         else:
-            error_msg = self._get_connection_error_message(rc)
+            error_msg = self._get_connection_error_message(reason_code)
             logging.error(error_msg)
 
-    def _on_disconnect(self, client, userdata, rc):
+    def _on_disconnect(self, client, userdata, flags, reason_code, properties):
         self._connected = False
-        if rc != 0:
-            logging.warning(f"Unexpected disconnection {rc}")
+        if reason_code != 0:
+            logging.warning(f"Unexpected disconnection {reason_code}")
 
-    def _on_publish(self, client, userdata, mid):
+    def _on_publish(self, client, userdata, mid, reason_codes, properties):
         logging.debug(f"Message published with ID: {mid}")
 
     def connect(self) -> bool:
