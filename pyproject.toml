@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ronschaeffer-mqtt-publisher"
-version = "0.1.2"
+version = "0.1.3"
 description = "An MQTT publisher package"
 authors = ["ronschaeffer <ron@ronschaeffer.com>"]
 license = "MIT"
@@ -76,7 +76,7 @@ line-ending = "lf"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.2"
+version = "0.1.3"
 tag_format = "v$version"
 version_files = [
     "pyproject.toml:version",
