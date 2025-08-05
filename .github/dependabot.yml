@@ -12,3 +12,6 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
+    ignore:
+      - dependency-name: "pre-commit"
+        # We use GitHub Actions for CI/CD instead of pre-commit hooks
