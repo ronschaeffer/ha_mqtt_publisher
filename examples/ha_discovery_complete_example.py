@@ -77,7 +77,7 @@ def main():
         identifier="mqtt_publisher_example_001",
         manufacturer="MQTT Publisher Library",
         model="Example Device v1.0",
-        sw_version="1.0.0",
+        sw_version="0.1.2-15bccf1-dirty",
     )
     print(f"📱 Created device: {device.name}")
 

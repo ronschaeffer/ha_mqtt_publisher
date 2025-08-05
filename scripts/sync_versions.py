@@ -106,14 +106,21 @@ class VersionSync:
             "config/ha_entities.yaml",
             "config/ha_*.yaml", 
             "ha_card/*.yaml",
-            "**/device.py",
-            "**/ha_discovery.py"
         ]
         
         for pattern in patterns:
-            ha_files.extend(self.project_root.glob(pattern))
-            
-        return ha_files
+            for file_path in self.project_root.glob(pattern):
+                # Skip files in .venv, .git, __pycache__ etc
+                if not any(part.startswith('.') for part in file_path.parts):
+                    ha_files.extend([file_path])
+                    
+        # Also look for Python files with device definitions
+        for py_file in self.project_root.rglob("*.py"):
+            if not any(part.startswith('.') for part in py_file.parts):
+                if any(keyword in py_file.read_text() for keyword in ["sw_version", "device_version"]):
+                    ha_files.append(py_file)
+                    
+        return list(set(ha_files))  # Remove duplicates
 
     def update_init_file(self, init_path: Path, check_only: bool = False) -> bool:
         """Update version in __init__.py file."""
@@ -151,11 +158,15 @@ class VersionSync:
         if not ha_path.exists():
             return False
 
-        content = ha_path.read_text()
+        try:
+            content = ha_path.read_text()
+        except UnicodeDecodeError:
+            # Skip binary files
+            return False
         
-        # Pattern to match sw_version: "x.y.z" or sw_version="x.y.z"
+        # Pattern to match sw_version: "0.1.2-15bccf1-dirty" or sw_version="x.y.z"
         sw_version_patterns = [
-            r'(\s*sw_version:\s*)["\']?[^"\'\n]*["\']?',  # YAML format
+            r'(\s*sw_version:\s*)["\'][^"\']*["\']',  # YAML format
             r'(sw_version\s*=\s*)["\'][^"\']*["\']',      # Python format
         ]
         

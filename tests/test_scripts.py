@@ -1,7 +1,7 @@
 """Tests specifically for the automation scripts."""
 
-import subprocess
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -21,14 +21,14 @@ class TestAutomationScripts:
         output = result.stdout
 
         # Should report current version
-        assert "pyproject.toml version:" in output
+        assert "Syncing versions from pyproject.toml:" in output
 
         # Should indicate sync status
         assert any(
             msg in output
             for msg in [
-                "All versions already synchronized",
-                "Version synchronization completed",
+                "Version synchronization complete!",
+                "All versions are synchronized!",
             ]
         )
 
@@ -98,9 +98,7 @@ class TestAutomationScripts:
             # Should exit with error
             assert result.returncode == 1
 
-            # Should have helpful error message
-            assert "Error:" in result.stdout
-
-
+        # Should have helpful error message
+        assert "Fatal error:" in result.stdout
 if __name__ == "__main__":
     pytest.main([__file__])

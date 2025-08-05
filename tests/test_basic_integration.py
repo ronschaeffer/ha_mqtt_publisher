@@ -1,7 +1,7 @@
 """Simple integration tests for new automation features."""
 
-import subprocess
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -19,7 +19,7 @@ class TestBasicAutomation:
         )
 
         assert result.returncode == 0
-        assert "pyproject.toml version:" in result.stdout
+        assert "Syncing versions from pyproject.toml:" in result.stdout
 
     def test_imports_work_correctly(self):
         """Test that all main imports work."""
@@ -76,8 +76,8 @@ class TestBasicAutomation:
     def test_examples_can_be_imported(self):
         """Test that examples can be imported without errors."""
         # This is a basic smoke test
-        import sys
         from pathlib import Path
+        import sys
 
         examples_dir = Path("examples")
         sys.path.insert(0, str(examples_dir))
