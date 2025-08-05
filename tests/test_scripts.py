@@ -100,5 +100,7 @@ class TestAutomationScripts:
 
         # Should have helpful error message
         assert "Fatal error:" in result.stdout
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
