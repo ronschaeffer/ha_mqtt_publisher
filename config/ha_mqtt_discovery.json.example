@@ -1,4 +1,6 @@
 {
+  "_comment": "Home Assistant MQTT Discovery JSON Template",
+  "_note": "Remove _comment and _note fields before use",
   "device": {
     "identifiers": "{{ identifier }}{{ generated_uuid }}",
     "connections": "{{ connections }}",
@@ -29,7 +31,8 @@
       "json_attributes_topic": "{{ json_attributes_topic }}",
       "json_attributes_template": "{{ json_attributes_template }}",
       "unique_id": "{{ identifier }}{{ generated_uuid }}",
-      "qos": "{{ qos }}"
+      "qos": "{{ qos }}",
+      "availability_topic": "{{ availability_topic }}"
     },
     "{{ component_id_2 }}": {
       "platform": "{{ platform }}",
@@ -42,7 +45,8 @@
       "json_attributes_topic": "{{ json_attributes_topic }}",
       "json_attributes_template": "{{ json_attributes_template }}",
       "unique_id": "{{ identifier }}{{ generated_uuid }}",
-      "qos": "{{ qos }}"
+      "qos": "{{ qos }}",
+      "availability_topic": "{{ availability_topic }}"
     }
   }
 }

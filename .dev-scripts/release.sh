@@ -78,12 +78,20 @@ new_version=$(poetry version --short)
 
 print_success "Version bumped from $current_version to $new_version"
 
+# Synchronize version across all files
+print_status "Synchronizing version across all project files..."
+if command -v python3 &> /dev/null; then
+    python3 scripts/sync_versions.py
+else
+    poetry run python scripts/sync_versions.py
+fi
+
 # Create git tag
 tag_name="v$new_version"
 print_status "Creating git tag: $tag_name"
 
 # Commit version bump
-git add pyproject.toml
+git add pyproject.toml src/mqtt_publisher/__init__.py
 git commit -m "chore: bump version to $new_version"
 
 # Create and push tag

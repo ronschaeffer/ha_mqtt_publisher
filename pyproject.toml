@@ -30,6 +30,9 @@ ruff = "^0.12.7"
 codespell = "^2.1.0"
 pytest-cov = "^6.2.1"
 
+[tool.poetry.group.automation.dependencies]
+commitizen = { version = "^3.0.0", optional = true }
+
 [tool.pytest.ini_options]
 pythonpath = [
     "src"
@@ -70,3 +73,13 @@ combine-as-imports = true
 quote-style = "double"
 indent-style = "space"
 line-ending = "lf"
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.2"
+tag_format = "v$version"
+version_files = [
+    "pyproject.toml:version",
+    "src/mqtt_publisher/__init__.py:__version__"
+]
+update_changelog_on_bump = true

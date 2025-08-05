@@ -2,16 +2,7 @@
 """
 Example demonstrating enhanced MQTT Publisher functionality.
 
-This example s    # Example of TLS validation
-    try:
-        publisher = MQTTPublisher(  # noqa: F841
-            broker_url="mqtt.example.com",
-            broker_port=8883,
-            client_id="test",
-            security="tls",
-            auth={"username": "user", "password": "pass"}
-            # Missing TLS configuration
-        )o use the new features:
+This example shows how to use the new features:
 1. Port type conversion
 2. Configuration builder pattern
 3. Enhanced validation with helpful error messages

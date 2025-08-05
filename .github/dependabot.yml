@@ -15,3 +15,16 @@ updates:
     ignore:
       - dependency-name: "pre-commit"
         # We use GitHub Actions for CI/CD instead of pre-commit hooks
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "ronschaeffer"
+    assignees:
+      - "ronschaeffer"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

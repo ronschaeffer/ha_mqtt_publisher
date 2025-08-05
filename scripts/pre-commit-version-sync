@@ -1,0 +1,16 @@
+#!/bin/bash
+# Pre-commit hook to ensure versions are synchronized
+
+# Check if versions are in sync
+python3 scripts/sync_versions.py
+
+# Check if any files were modified
+if ! git diff --quiet src/mqtt_publisher/__init__.py; then
+    echo "Warning: __init__.py version was out of sync and has been updated"
+    echo "Please add the changes and commit again:"
+    echo "  git add src/mqtt_publisher/__init__.py"
+    echo "  git commit --amend --no-edit"
+    exit 1
+fi
+
+exit 0
