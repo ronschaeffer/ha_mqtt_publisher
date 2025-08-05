@@ -1,10 +1,10 @@
 # MQTT Publisher
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-An MQTT publishing library with integrated **Home Assistant MQTT Discovery** support. This package provides both an MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
+An MQTT publishing library with **MQTT 5.0 support** and integrated **Home Assistant MQTT Discovery**. This package provides both a modern MQTT publishing engine and a framework for creating Home Assistant auto-discovery configurations.
 
 ## 🚀 Quick Start
 
@@ -34,6 +34,7 @@ with MQTTPublisher(config=config) as publisher:
 
 ### 🚀 MQTT Publishing Engine
 
+- **MQTT 5.0 Protocol Support** with properties, reason codes, and enhanced error handling
 - **Enhanced Configuration Handling** with automatic type conversion and validation
 - **Flexible Constructor** supporting both individual parameters and config dictionaries
 - **Automatic Port Type Conversion** (strings automatically converted to integers)
@@ -72,21 +73,6 @@ git clone https://github.com/ronschaeffer/mqtt_publisher.git
 cd mqtt_publisher
 poetry install
 ```
-
-## 🔄 Version 2.1 Update
-
-**MQTT Publisher now uses paho-mqtt 2.1.0** with full VERSION2 API for enhanced MQTT 5.0 support.
-
-### What Changed
-- ✅ **Updated to paho-mqtt 2.1.0** from 1.6.1
-- ✅ **Full VERSION2 API** - Complete migration with enhanced callback signatures
-- ✅ **MQTT 5.0 support** - Access to properties, reason codes, and enhanced features
-- ✅ **Enhanced type safety** with ReasonCode objects and better boolean handling
-- ✅ **Python 3.12 compatibility** and performance improvements
-- ✅ **Improved error handling** with detailed reason codes
-
-### For Existing Users
-No code changes required! Your existing code will continue to work exactly as before. The library handles all compatibility internally while providing access to the latest paho-mqtt improvements.
 
 ## ⚙️ Configuration
 
@@ -341,7 +327,7 @@ except Exception as e:
     pass
 ```
 
-## 🎯 Enhanced Features (New!)
+## 🎯 Enhanced Features
 
 ### Automatic Type Conversion
 
@@ -526,15 +512,9 @@ The discovery framework automatically:
 
 See the `examples/` directory for comprehensive examples:
 
-- **`enhanced_features_example.py`** - Demonstrates all new enhanced features
+- **`enhanced_features_example.py`** - Demonstrates enhanced configuration features
 - **`ha_discovery_complete_example.py`** - Full Home Assistant discovery setup
 - **`config/config.yaml.example`** - Complete configuration template
-
-### Documentation
-
-- **`ENHANCEMENTS.md`** - Detailed documentation of all enhanced features
-- **`TWICKENHAM_MIGRATION_GUIDE.md`** - Guide for migrating existing projects
-- **`GITATTRIBUTES_FIX_SUMMARY.md`** - Cross-platform line ending configuration
 
 ### Real-World Usage Patterns
 
@@ -569,38 +549,6 @@ with MQTTPublisher(config=mqtt_config) as publisher:
     for sensor_name, value in sensors.items():
         topic = f"sensors/{sensor_name}"
         publisher.publish(topic, {"value": value}, retain=True)
-```
-
-## 🔄 Recent Updates
-
-### v2.0.0 - Enhanced Configuration & Validation (August 2025)
-
-- ✨ **Automatic Type Conversion**: String ports and retry counts auto-convert to integers
-- ✨ **Configuration Dictionary Support**: Constructor accepts `config` parameter with complete configuration
-- ✨ **MQTTConfig Builder**: New utility class for building and validating configurations
-- ✨ **Enhanced Validation**: Comprehensive validation with helpful error messages
-- ✨ **Port/TLS Consistency Warnings**: Warns about common port/security mismatches
-- ✨ **Improved Error Messages**: Context-aware error reporting for faster troubleshooting
-
-### Migration from v1.x
-
-Existing code continues to work unchanged. New features are opt-in:
-
-```python
-# v1.x style (still works)
-publisher = MQTTPublisher(
-    broker_url="mqtt.example.com",
-    broker_port=8883,
-    client_id="test"
-)
-
-# v2.x enhanced style (recommended)
-config = MQTTConfig.build_config(
-    broker_url="mqtt.example.com",
-    broker_port="8883",  # String auto-converted
-    client_id="test"
-)
-publisher = MQTTPublisher(config=config)
 ```
 
 ## 🧪 Testing
