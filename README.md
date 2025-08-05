@@ -582,8 +582,6 @@ The discovery framework automatically:
 
 ## 📚 Examples
 
-## 📚 Examples
-
 ### Complete Examples Directory
 
 The `examples/` directory contains comprehensive examples:
@@ -748,14 +746,3 @@ When reporting issues, please include:
 - MQTT broker type and version
 - Complete error messages
 - Minimal reproduction code
-
-### Feature Requests
-
-We welcome feature requests! Please:
-- Check existing issues first
-- Describe the use case clearly
-- Provide examples of desired API
-
----
-
-**Made with ❤️ for the IoT and Home Assistant community**
