@@ -2,7 +2,7 @@ import json
 import logging
 import ssl
 import time
-from typing import Any, Union
+from typing import Any
 
 import paho.mqtt.client as mqtt
 
@@ -28,7 +28,7 @@ class MQTTPublisher:
         config: Complete configuration dictionary (alternative to individual params)
     """
 
-    def _convert_port(self, port: Union[int, str, None]) -> int:
+    def _convert_port(self, port: int | str | None) -> int:
         """Convert port to integer, handling string conversion."""
         if port is None:
             return 1883  # Default MQTT port
@@ -103,15 +103,15 @@ class MQTTPublisher:
 
     def __init__(
         self,
-        broker_url: Union[str, None] = None,
-        broker_port: Union[int, str, None] = None,
-        client_id: Union[str, None] = None,
+        broker_url: str | None = None,
+        broker_port: int | str | None = None,
+        client_id: str | None = None,
         security: str = "none",
-        auth: Union[dict, None] = None,
-        tls: Union[dict, None] = None,
+        auth: dict | None = None,
+        tls: dict | None = None,
         max_retries: int = 3,
-        last_will: Union[dict, None] = None,
-        config: Union[dict, None] = None,
+        last_will: dict | None = None,
+        config: dict | None = None,
     ):
         # Handle config dict parameter
         if config:
@@ -286,7 +286,7 @@ class MQTTPublisher:
             return False
 
         try:
-            if isinstance(payload, (dict, list)):
+            if isinstance(payload, dict | list):
                 payload = json.dumps(payload)
             result = self.client.publish(topic, payload, qos=qos, retain=retain)
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
