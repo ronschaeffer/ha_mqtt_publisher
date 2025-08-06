@@ -78,7 +78,7 @@ def main():
         model="WS-1000",
         manufacturer="Example Corp",
         sw_version="0.1.4",
-        configuration_url="http://weather-station.local/config"
+        configuration_url="http://weather-station.local/config",
     )
     device = device_config  # For backward compatibility with examples below
     print(f"📱 Created device: {device.name}")
