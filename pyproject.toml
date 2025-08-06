@@ -18,7 +18,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
-paho-mqtt = "^2.1.0"
+paho-mqtt = "2.1.0"
 pyyaml = "^6.0"
 typing-extensions = "^4.7.0"  # For advanced typing support
 python-dotenv = "^1.1.1"
