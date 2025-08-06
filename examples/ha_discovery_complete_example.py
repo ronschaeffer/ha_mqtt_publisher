@@ -72,13 +72,15 @@ def main():
     config = Config(str(config_path))
 
     # Create device representing your application
-    device = Device(
-        name="MQTT Publisher Example",
-        identifier="mqtt_publisher_example_001",
-        manufacturer="MQTT Publisher Library",
-        model="Example Device v1.0",
-        sw_version="0.1.3",
+    device_config = Device(
+        identifiers=["weather_station_01"],
+        name="Weather Station",
+        model="WS-1000",
+        manufacturer="Example Corp",
+        sw_version="0.1.4",
+        configuration_url="http://weather-station.local/config"
     )
+    device = device_config  # For backward compatibility with examples below
     print(f"📱 Created device: {device.name}")
 
     # Create various sensors to demonstrate capabilities
