@@ -7,10 +7,10 @@ This module provides the StatusSensor class which creates a binary sensor
 for monitoring the health/status of the MQTT publishing system.
 """
 
-from .entity import Entity
+from .entity import BinarySensor
 
 
-class StatusSensor(Entity):
+class StatusSensor(BinarySensor):
     """
     Represents the status binary_sensor in Home Assistant.
     This creates a binary sensor that indicates whether the system is running
@@ -25,27 +25,16 @@ class StatusSensor(Entity):
             config: The application's configuration object with get() method.
             device: The Device object for HA discovery.
         """
-        super().__init__(config, device)
-        self.component = "binary_sensor"
-        self.device_class = "problem"
-        self.unique_id = "status"
-        self.name = "Status"
-        self.state_topic = f"{self.base_topic}/status"
-        self.value_template = "{{ 'ON' if value_json.status == 'error' else 'OFF' }}"
-        self.json_attributes_topic = f"{self.base_topic}/status"
-        self.json_attributes_template = "{{ value_json | tojson }}"
+        base_topic = config.get("mqtt.base_topic", "mqtt_publisher")
 
-    def get_config_payload(self):
-        """
-        Returns the discovery configuration payload for the status sensor.
-        """
-        payload = super().get_config_payload()
-        payload.update(
-            {
-                "device_class": self.device_class,
-                "value_template": self.value_template,
-                "json_attributes_topic": self.json_attributes_topic,
-                "json_attributes_template": self.json_attributes_template,
-            }
+        super().__init__(
+            config,
+            device,
+            unique_id="status",
+            name="Status",
+            device_class="problem",
+            state_topic=f"{base_topic}/status",
+            value_template="{{ 'ON' if value_json.status == 'error' else 'OFF' }}",
+            json_attributes_topic=f"{base_topic}/status",
+            json_attributes_template="{{ value_json | tojson }}",
         )
-        return payload

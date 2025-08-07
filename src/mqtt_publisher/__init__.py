@@ -1,6 +1,6 @@
 """An MQTT publisher package with Home Assistant Discovery support"""
 
-__version__ = "0.1.4"
+__version__ = "0.1.3"
 __author__ = "ronschaeffer"
 __email__ = "ron@ronschaeffer.com"
 
@@ -10,11 +10,9 @@ from .config import Config, MQTTConfig
 # Import HA discovery components
 from .ha_discovery import (
     Device,
+    DiscoveryManager,
     Entity,
-    Sensor,
     StatusSensor,
-    create_sensor,
-    create_status_sensor,
     publish_discovery_configs,
 )
 from .publisher import MQTTPublisher
@@ -22,12 +20,10 @@ from .publisher import MQTTPublisher
 __all__ = [
     "Config",
     "Device",
+    "DiscoveryManager",
     "Entity",
     "MQTTConfig",
     "MQTTPublisher",
-    "Sensor",
     "StatusSensor",
-    "create_sensor",
-    "create_status_sensor",
     "publish_discovery_configs",
 ]

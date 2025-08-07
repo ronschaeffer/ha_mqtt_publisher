@@ -507,6 +507,101 @@ with MQTTPublisher(**mqtt_config) as publisher:
     status_sensor.publish_online(publisher)
 ```
 
+### 🚀 Enhanced Home Assistant Discovery (New!)
+
+The library now supports **all Home Assistant entity types** and **complete device information**:
+
+#### Complete Device Information
+
+```python
+from mqtt_publisher.ha_discovery import Device
+
+# Device with all supported HA fields
+device = Device(
+    config,
+    name="Smart Home Hub",
+    manufacturer="Example Corp",
+    model="Hub Pro v2",
+    sw_version="2.1.3",                    # ✅ Now supported
+    hw_version="1.4",                      # ✅ Now supported
+    serial_number="SH001234567",           # ✅ Now supported
+    configuration_url="http://192.168.1.100:8080/config",  # ✅ Now supported
+    suggested_area="Living Room",          # ✅ Now supported
+    connections=[["mac", "02:42:ac:11:00:02"]]  # ✅ Now supported
+)
+```
+
+#### All Entity Types Supported
+
+```python
+from mqtt_publisher.ha_discovery import (
+    Sensor, BinarySensor, Switch, Light, Cover, Climate,
+    Fan, Lock, Number, Select, Text, Button, DeviceTracker,
+    AlarmControlPanel, Camera, Vacuum, Scene, Siren
+)
+
+# Temperature sensor with advanced features
+temp_sensor = Sensor(
+    config, device,
+    name="Living Room Temperature",
+    unique_id="temp_living_room",
+    state_topic="home/living_room/temperature",
+    device_class="temperature",
+    unit_of_measurement="°C",
+    state_class="measurement",             # ✅ Now supported
+    availability_topic="home/status",      # ✅ Now supported
+    icon="mdi:thermometer"
+)
+
+# Smart light with brightness and RGB
+rgb_light = Light(
+    config, device,
+    name="RGB Strip",
+    unique_id="light_rgb_strip",
+    state_topic="home/lights/rgb/state",
+    command_topic="home/lights/rgb/set",   # ✅ Command topics supported
+    brightness_state_topic="home/lights/rgb/brightness",     # ✅ Now supported
+    brightness_command_topic="home/lights/rgb/brightness/set", # ✅ Now supported
+    rgb_state_topic="home/lights/rgb/rgb",                   # ✅ RGB support
+    rgb_command_topic="home/lights/rgb/rgb/set",             # ✅ RGB support
+    effect_list=["rainbow", "colorloop", "strobe"]          # ✅ Effects supported
+)
+
+# Smart thermostat
+thermostat = Climate(
+    config, device,
+    name="Living Room Thermostat",
+    unique_id="climate_living_room",
+    current_temperature_topic="home/climate/current_temp",
+    temperature_command_topic="home/climate/target_temp/set",  # ✅ Full climate control
+    mode_command_topic="home/climate/mode/set",
+    modes=["off", "heat", "cool", "auto"],                    # ✅ All modes supported
+    fan_modes=["auto", "low", "medium", "high"]               # ✅ Fan control
+)
+
+# Volume control (Number entity)
+volume = Number(
+    config, device,
+    name="Speaker Volume",
+    unique_id="volume_speaker",
+    state_topic="home/audio/volume",
+    command_topic="home/audio/volume/set",
+    min=0, max=100, step=5,                # ✅ Range controls
+    unit_of_measurement="%"
+)
+```
+
+#### Key Enhancements
+
+- ✅ **All 18+ Home Assistant entity types** (sensors, switches, lights, covers, climate, etc.)
+- ✅ **Complete device information** (11 supported fields vs previous 4)
+- ✅ **Advanced entity attributes** (availability, state_class, device_class, etc.)
+- ✅ **Command topics** for controllable entities (switches, lights, climate, etc.)
+- ✅ **Flexible entity creation** - any HA feature can be configured via kwargs
+- ✅ **Backward compatible** - existing code continues to work
+
+See [`examples/comprehensive_ha_discovery_example.py`](examples/comprehensive_ha_discovery_example.py) for a complete demonstration of all entity types and features.
+
 ## 📖 Usage Example
 
 See [`examples/ha_discovery_complete_example.py`](examples/ha_discovery_complete_example.py) for an example showing:
@@ -560,7 +655,7 @@ with MQTTPublisher(
 ) as publisher:
     # Publish simple message
     publisher.publish("sensors/temperature", "23.5")
-    
+
     # Publish JSON data
     publisher.publish("sensors/humidity", {
         "value": 65.0,
@@ -742,6 +837,7 @@ poetry run pytest
 ### Reporting Issues
 
 When reporting issues, please include:
+
 - Python version and OS
 - MQTT broker type and version
 - Complete error messages

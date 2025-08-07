@@ -1,37 +1,20 @@
-# ha_discovery/__init__.py
-
 """
-Home Assistant MQTT Discovery Framework
+Home Assistant MQTT Discovery module.
 
-This module provides a sophisticated object-oriented framework for creating
-Home Assistant MQTT discovery configurations. It includes:
-
-- Device: Groups entities under a single device
-- Entity: Base class for all Home Assistant entities
-- Sensor: Regular sensor entities with rich configuration
-- StatusSensor: Binary sensor for monitoring system health
-- Discovery Publisher: High-level interface for publishing discovery configs
-
-Usage:
-    from mqtt_publisher.ha_discovery import Device, Sensor, StatusSensor, publish_discovery_configs
-    from mqtt_publisher.publisher import MQTTPublisher
-
-    device = Device(config)
-    publisher = MQTTPublisher(**mqtt_config)
-    publish_discovery_configs(config, publisher, device)
+This module provides comprehensive Home Assistant MQTT Discovery support,
+including entity creation, device management, and discovery lifecycle management.
 """
 
 from .device import Device
-from .entity import Entity, Sensor
-from .publisher import create_sensor, create_status_sensor, publish_discovery_configs
+from .discovery_manager import DiscoveryManager
+from .entity import Entity
+from .publisher import publish_discovery_configs
 from .status_sensor import StatusSensor
 
 __all__ = [
     "Device",
+    "DiscoveryManager",
     "Entity",
-    "Sensor",
     "StatusSensor",
-    "create_sensor",
-    "create_status_sensor",
     "publish_discovery_configs",
 ]

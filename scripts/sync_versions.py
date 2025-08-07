@@ -126,9 +126,6 @@ class VersionSync:
         # Also look for Python files with device definitions
         for py_file in self.project_root.rglob("*.py"):
             if not any(part.startswith(".") for part in py_file.parts):
-                # Skip the version sync script itself to prevent self-modification
-                if py_file.name == "sync_versions.py":
-                    continue
                 if any(
                     keyword in py_file.read_text()
                     for keyword in ["sw_version", "device_version"]
@@ -183,9 +180,9 @@ class VersionSync:
             # Skip binary files
             return False
 
-        # Pattern to match sw_version: "x.y.z" or sw_version="x.y.z"
+        # Pattern to match sw_version: "0.1.3-2ca60e7-dirty" or sw_version="x.y.z"
         sw_version_patterns = [
-            r'(\s*sw_version:\s*)["\']?[^"\'\n]*["\']?',  # YAML format
+            r'(\s*sw_version:\s*)["\'][^"\']*["\']',  # YAML format
             r'(sw_version\s*=\s*)["\'][^"\']*["\']',  # Python format
         ]
 
@@ -195,9 +192,9 @@ class VersionSync:
         for pattern in sw_version_patterns:
             if re.search(pattern, content):
                 if ha_path.suffix in [".yaml", ".yml"]:
-                    replacement = rf'\1"{self.version}"'
+                    replacement = rf'\1"{self.git_version}"'
                 else:
-                    replacement = rf'\1"{self.version}"'
+                    replacement = rf'\1"{self.git_version}"'
 
                 new_content = re.sub(pattern, replacement, new_content)
                 updated = True
@@ -207,7 +204,7 @@ class VersionSync:
             if not check_only:
                 ha_path.write_text(new_content)
                 print(
-                    f"✅ Updated {ha_path.relative_to(self.project_root)}: {self.version}"
+                    f"✅ Updated {ha_path.relative_to(self.project_root)}: {self.git_version}"
                 )
             else:
                 print(

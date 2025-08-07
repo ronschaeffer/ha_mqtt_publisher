@@ -7,6 +7,7 @@ This directory contains configuration templates for the MQTT Publisher package.
 ### Core Configuration Templates
 
 1. **`config.yaml.example`** - Basic MQTT configuration template
+
    - Standard MQTT broker settings
    - Authentication options
    - TLS configuration
@@ -21,6 +22,7 @@ This directory contains configuration templates for the MQTT Publisher package.
 ### Home Assistant Discovery Templates
 
 3. **`ha_mqtt_discovery.yaml.example`** - YAML template for HA discovery components
+
    - Device and component definitions
    - Discovery topic structure
    - Component configuration options
@@ -32,12 +34,14 @@ This directory contains configuration templates for the MQTT Publisher package.
 ## Quick Start
 
 1. **For basic MQTT usage**:
+
    ```bash
    cp config/config.yaml.example config/config.yaml
    # Edit config.yaml with your MQTT broker settings
    ```
 
 2. **For Home Assistant integration**:
+
    ```bash
    cp config/config_ha_discovery.yaml.example config/config.yaml
    # Edit config.yaml with your settings and HA preferences
@@ -54,12 +58,14 @@ This directory contains configuration templates for the MQTT Publisher package.
 All configuration files support environment variable substitution using `${VARIABLE}` syntax.
 
 **Required environment variables**:
+
 - `MQTT_BROKER_URL` - Your MQTT broker hostname
 - `MQTT_USERNAME` - MQTT username
 - `MQTT_PASSWORD` - MQTT password
 - `MQTT_CLIENT_ID` - Unique client identifier
 
 **Optional environment variables**:
+
 - `MQTT_BROKER_PORT` - Broker port (default: 8883)
 - `MQTT_USE_TLS` - Enable TLS (default: true)
 

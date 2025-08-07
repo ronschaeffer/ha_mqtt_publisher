@@ -5,6 +5,7 @@ This project supports multiple levels of version automation, from manual to full
 ## Automation Levels
 
 ### 1. Manual Versioning (Current)
+
 ```bash
 # Edit pyproject.toml manually
 poetry version patch
@@ -13,18 +14,21 @@ git commit -am "chore: bump version"
 ```
 
 ### 2. Semi-Automated (Recommended)
+
 ```bash
 # Use the release script
 ./release.sh patch   # or minor, major
 ```
 
 ### 3. GitHub Actions (Remote)
+
 - Go to Actions → "Auto Version Bump"
 - Select version type (patch/minor/major)
 - Choose whether to create GitHub release
 - Run workflow
 
 ### 4. Commitizen (Advanced)
+
 ```bash
 # Install commitizen
 poetry install --with automation
@@ -39,6 +43,7 @@ poetry run cz bump --interactive
 ## Features
 
 ### ✅ Current Automation
+
 - **Version synchronization**: Keeps `pyproject.toml` and `__init__.py` in sync
 - **Semantic versioning**: Support for major.minor.patch
 - **Automated tagging**: Creates git tags for releases
@@ -48,7 +53,9 @@ poetry run cz bump --interactive
 ### 🚀 Enhanced Features Available
 
 #### Pre-commit Hook (Optional)
+
 Install the version sync pre-commit hook:
+
 ```bash
 # Copy hook to git hooks directory
 cp scripts/pre-commit-version-sync .git/hooks/pre-commit
@@ -56,6 +63,7 @@ chmod +x .git/hooks/pre-commit
 ```
 
 #### Changelog Generation (Optional)
+
 ```bash
 # Manual changelog update
 echo "## [$(poetry version --short)] - $(date +%Y-%m-%d)" >> CHANGELOG.md
@@ -65,7 +73,9 @@ poetry run cz changelog
 ```
 
 #### Automated Version Detection
+
 The system can detect version bumps automatically based on:
+
 - Commit message conventions (feat:, fix:, BREAKING CHANGE:)
 - Pull request labels
 - File changes
@@ -73,6 +83,7 @@ The system can detect version bumps automatically based on:
 ## Usage Examples
 
 ### Daily Development
+
 ```bash
 # Make changes, commit
 git commit -m "fix: resolve MQTT connection issue"
@@ -82,6 +93,7 @@ git commit -m "fix: resolve MQTT connection issue"
 ```
 
 ### Feature Releases
+
 ```bash
 # After completing a feature
 git commit -m "feat: add Home Assistant discovery support"
@@ -91,6 +103,7 @@ git commit -m "feat: add Home Assistant discovery support"
 ```
 
 ### Breaking Changes
+
 ```bash
 # After making breaking changes
 git commit -m "feat!: restructure API for better usability"
@@ -100,6 +113,7 @@ git commit -m "feat!: restructure API for better usability"
 ```
 
 ### CI/CD Integration
+
 ```bash
 # In GitHub Actions or CI pipeline
 python scripts/sync_versions.py
@@ -111,13 +125,16 @@ git push --tags
 ## Configuration
 
 ### Version Files Managed
+
 - `pyproject.toml` - Primary version source
 - `src/mqtt_publisher/__init__.py` - Package version
 - Git tags - Release marking
 - CHANGELOG.md - Version history (optional)
 
 ### Commitizen Configuration
+
 Located in `pyproject.toml`:
+
 ```toml
 [tool.commitizen]
 name = "cz_conventional_commits"
@@ -131,15 +148,17 @@ version_files = [
 
 ## Best Practices
 
-1. **Use semantic versioning**: 
+1. **Use semantic versioning**:
+
    - Patch: Bug fixes, small changes
    - Minor: New features, backward compatible
    - Major: Breaking changes
 
 2. **Commit message format**:
+
    ```
    type(scope): description
-   
+
    feat: new feature
    fix: bug fix
    docs: documentation
@@ -147,6 +166,7 @@ version_files = [
    ```
 
 3. **Release workflow**:
+
    - Develop on feature branches
    - Merge to main
    - Run `./release.sh type`
@@ -160,6 +180,7 @@ version_files = [
 ## Troubleshooting
 
 ### Version Mismatch
+
 ```bash
 # Fix version synchronization
 python scripts/sync_versions.py
@@ -168,6 +189,7 @@ git commit -m "fix: synchronize version"
 ```
 
 ### Failed Release
+
 ```bash
 # Check current state
 git status
@@ -179,6 +201,7 @@ git tag -d v0.1.3        # Delete local tag
 ```
 
 ### PyPI Upload Issues
+
 ```bash
 # Manual upload if GitHub Actions fails
 poetry build

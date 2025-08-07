@@ -15,6 +15,8 @@ logging.basicConfig(
 class MQTTPublisher:
     """An MQTT publisher class for sending messages to an MQTT broker.
 
+    Supports MQTT 3.1, 3.1.1, and 5.0 protocols with modern paho-mqtt 2.1.0+ features.
+
     Args:
         broker_url: URL of the MQTT broker
         broker_port: Port number for the broker
@@ -26,6 +28,8 @@ class MQTTPublisher:
         max_retries: Maximum connection attempts
         last_will: Last Will and Testament settings
         config: Complete configuration dictionary (alternative to individual params)
+        protocol: MQTT protocol version ('MQTTv31', 'MQTTv311', 'MQTTv5')
+        properties: MQTT 5.0 properties for connection
     """
 
     def _convert_port(self, port: int | str | None) -> int:
@@ -112,6 +116,8 @@ class MQTTPublisher:
         max_retries: int = 3,
         last_will: dict | None = None,
         config: dict | None = None,
+        protocol: str = "MQTTv311",  # New: Support for MQTT protocol version
+        properties: dict | None = None,  # New: MQTT 5.0 properties
     ):
         # Handle config dict parameter
         if config:
@@ -123,11 +129,15 @@ class MQTTPublisher:
             tls = config.get("tls")
             max_retries = config.get("max_retries", 3)
             last_will = config.get("last_will")
+            self.protocol = config.get("protocol", protocol)
+            self.properties = config.get("properties", properties)
         else:
             # Use individual parameters (existing behavior)
             self.broker_url = broker_url
             self.broker_port = self._convert_port(broker_port)
             self.client_id = client_id
+            self.protocol = protocol
+            self.properties = properties or {}
 
         self.security = security
         self.auth = auth or {}
@@ -142,8 +152,19 @@ class MQTTPublisher:
         assert self.broker_url is not None, "broker_url validated to be not None"
         assert self.client_id is not None, "client_id validated to be not None"
 
+        # Map protocol string to paho-mqtt constants
+        protocol_map = {
+            "MQTTv31": mqtt.MQTTv31,
+            "MQTTv311": mqtt.MQTTv311,
+            "MQTTv5": mqtt.MQTTv5,
+        }
+
+        protocol_version = protocol_map.get(self.protocol, mqtt.MQTTv311)
+
         self.client = mqtt.Client(
-            mqtt.CallbackAPIVersion.VERSION2, client_id=self.client_id
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+            client_id=self.client_id,
+            protocol=protocol_version,
         )
 
         # Configure Last Will and Testament
@@ -268,7 +289,12 @@ class MQTTPublisher:
             logging.info("Disconnected from MQTT broker")
 
     def publish(
-        self, topic: str, payload: Any, qos: int = 0, retain: bool = False
+        self,
+        topic: str,
+        payload: Any,
+        qos: int = 0,
+        retain: bool = False,
+        properties: dict | None = None,
     ) -> bool:
         """Publish a payload to a topic.
 
@@ -277,6 +303,7 @@ class MQTTPublisher:
             payload: The message payload
             qos: Quality of service (0-2)
             retain: Whether to retain the message
+            properties: MQTT 5.0 properties (only used with MQTTv5)
 
         Returns:
             bool: Success status
@@ -288,15 +315,134 @@ class MQTTPublisher:
         try:
             if isinstance(payload, dict | list):
                 payload = json.dumps(payload)
-            result = self.client.publish(topic, payload, qos=qos, retain=retain)
+
+            # Use MQTT 5.0 properties if provided and using MQTTv5
+            if properties and self.protocol == "MQTTv5":
+                mqtt_properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)
+                for key, value in properties.items():
+                    setattr(mqtt_properties, key, value)
+                result = self.client.publish(
+                    topic, payload, qos=qos, retain=retain, properties=mqtt_properties
+                )
+            else:
+                result = self.client.publish(topic, payload, qos=qos, retain=retain)
+
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 logging.info("Published message to topic '%s'", topic)
                 return True
-            logging.error("Publication failed with error code %d", result.rc)
-            return False
+            else:
+                logging.error(f"Failed to publish message: {result.rc}")
+                return False
         except Exception as e:
-            logging.error("Publication failed: %s", e, exc_info=True)
+            logging.error(f"Error publishing message: {e}")
             return False
+
+    def subscribe(
+        self, topic: str, qos: int = 0, callback=None, properties: dict | None = None
+    ) -> bool:
+        """Subscribe to an MQTT topic.
+
+        Args:
+            topic: The MQTT topic to subscribe to
+            qos: Quality of service (0-2)
+            callback: Optional callback function for this specific topic
+            properties: MQTT 5.0 properties (only used with MQTTv5)
+
+        Returns:
+            bool: Success status
+        """
+        if not self._connected:
+            logging.error("Not connected to broker")
+            return False
+
+        try:
+            # Add topic-specific callback if provided
+            if callback:
+                self.client.message_callback_add(topic, callback)
+
+            # Use MQTT 5.0 properties if provided and using MQTTv5
+            if properties and self.protocol == "MQTTv5":
+                mqtt_properties = mqtt.Properties(mqtt.PacketTypes.SUBSCRIBE)
+                for key, value in properties.items():
+                    setattr(mqtt_properties, key, value)
+                result = self.client.subscribe(
+                    topic, qos=qos, properties=mqtt_properties
+                )
+            else:
+                result = self.client.subscribe(topic, qos=qos)
+
+            if result[0] == mqtt.MQTT_ERR_SUCCESS:
+                logging.info(f"Subscribed to topic '{topic}'")
+                return True
+            else:
+                logging.error(f"Failed to subscribe to topic: {result[0]}")
+                return False
+        except Exception as e:
+            logging.error(f"Error subscribing to topic: {e}")
+            return False
+
+    def unsubscribe(self, topic: str, properties: dict | None = None) -> bool:
+        """Unsubscribe from an MQTT topic.
+
+        Args:
+            topic: The MQTT topic to unsubscribe from
+            properties: MQTT 5.0 properties (only used with MQTTv5)
+
+        Returns:
+            bool: Success status
+        """
+        if not self._connected:
+            logging.error("Not connected to broker")
+            return False
+
+        try:
+            # Remove topic-specific callback
+            self.client.message_callback_remove(topic)
+
+            # Use MQTT 5.0 properties if provided and using MQTTv5
+            if properties and self.protocol == "MQTTv5":
+                mqtt_properties = mqtt.Properties(mqtt.PacketTypes.UNSUBSCRIBE)
+                for key, value in properties.items():
+                    setattr(mqtt_properties, key, value)
+                result = self.client.unsubscribe(topic, properties=mqtt_properties)
+            else:
+                result = self.client.unsubscribe(topic)
+
+            if result[0] == mqtt.MQTT_ERR_SUCCESS:
+                logging.info(f"Unsubscribed from topic '{topic}'")
+                return True
+            else:
+                logging.error(f"Failed to unsubscribe from topic: {result[0]}")
+                return False
+        except Exception as e:
+            logging.error(f"Error unsubscribing from topic: {e}")
+            return False
+
+    def set_message_callback(self, callback) -> None:
+        """Set the default message callback for all subscribed topics.
+
+        Args:
+            callback: Function to call when a message is received
+                     Signature: callback(client, userdata, message)
+        """
+        self.client.on_message = callback
+
+    def add_topic_callback(self, topic_filter: str, callback) -> None:
+        """Add a callback for a specific topic filter.
+
+        Args:
+            topic_filter: MQTT topic filter (can include wildcards)
+            callback: Function to call when a message matching the filter is received
+        """
+        self.client.message_callback_add(topic_filter, callback)
+
+    def remove_topic_callback(self, topic_filter: str) -> None:
+        """Remove a callback for a specific topic filter.
+
+        Args:
+            topic_filter: MQTT topic filter to remove callback for
+        """
+        self.client.message_callback_remove(topic_filter)
 
     def __enter__(self):
         if not self.connect():

@@ -5,15 +5,17 @@ This directory contains comprehensive examples demonstrating how to use the mqtt
 ## Prerequisites
 
 1. **Install dependencies**:
+
    ```bash
    poetry install
    ```
 
 2. **Set up configuration**:
+
    ```bash
    # Copy and edit the configuration template
    cp config/config.yaml.example config/config.yaml
-   
+
    # Copy and edit the environment template
    cp .env.example .env
    ```
@@ -31,6 +33,7 @@ This directory contains comprehensive examples demonstrating how to use the mqtt
 ### 1. Enhanced Features Example (`enhanced_features_example.py`)
 
 Demonstrates the core MQTT publisher functionality including:
+
 - Automatic port type conversion
 - Configuration builder pattern
 - Enhanced validation with helpful error messages
@@ -38,11 +41,13 @@ Demonstrates the core MQTT publisher functionality including:
 - Error handling examples
 
 **Run it**:
+
 ```bash
 poetry run python examples/enhanced_features_example.py
 ```
 
 **What it shows**:
+
 - Basic MQTT publisher usage
 - Configuration validation
 - Different security modes
@@ -51,17 +56,20 @@ poetry run python examples/enhanced_features_example.py
 ### 2. Home Assistant Discovery Example (`ha_discovery_complete_example.py`)
 
 Complete demonstration of Home Assistant MQTT Discovery integration:
+
 - Device and sensor creation
 - Discovery configuration publishing
 - Real-time data publishing
 - Status sensor management
 
 **Run it**:
+
 ```bash
 poetry run python examples/ha_discovery_complete_example.py
 ```
 
 **What it shows**:
+
 - Creating HA-compatible devices and sensors
 - Publishing discovery configurations
 - Sensor data with proper JSON formatting
@@ -70,6 +78,7 @@ poetry run python examples/ha_discovery_complete_example.py
 
 **Home Assistant Integration**:
 After running this example, check your Home Assistant installation for:
+
 - Device: "MQTT Publisher Example"
 - Sensors: Temperature, Humidity, System Status, Message Count
 - All sensors grouped under the device
@@ -95,15 +104,17 @@ The `config/` directory contains several configuration templates:
 ### Debug Steps
 
 1. **Test MQTT connection**:
+
    ```bash
    # Install mosquitto clients
    sudo apt install mosquitto-clients
-   
+
    # Test connection
    mosquitto_pub -h your-broker.com -p 8883 -u username -P password -t test -m "hello"
    ```
 
 2. **Check configuration loading**:
+
    ```bash
    poetry run python -c "from mqtt_publisher.config import Config; print(Config('config/config.yaml').get_all())"
    ```
@@ -116,6 +127,7 @@ The `config/` directory contains several configuration templates:
 ## Example Output
 
 When running the Home Assistant discovery example, you should see output like:
+
 ```
 🚀 Starting Home Assistant MQTT Discovery Example
 ✅ Loaded project environment from: /path/to/.env
@@ -132,6 +144,7 @@ When running the Home Assistant discovery example, you should see output like:
 ## Next Steps
 
 After running these examples:
+
 1. Modify the configuration for your specific use case
 2. Create your own sensors and devices
 3. Integrate with your Home Assistant installation
