@@ -388,7 +388,14 @@ class TestPublisherAdditionalCoverage:
         assert result is True
         mock_client.publish.assert_called_once()
         call_args = mock_client.publish.call_args
-        assert "properties" in call_args[1]
+        
+        # Only check for properties if MQTT Properties are available (paho-mqtt >= 2.0.0)
+        import paho.mqtt.client as mqtt
+        if hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes'):
+            assert "properties" in call_args[1]
+        else:
+            # In legacy mode, properties should not be passed
+            assert "properties" not in call_args[1]
 
     def test_publish_failure_return_code(self):
         """Test publish with failure return code."""

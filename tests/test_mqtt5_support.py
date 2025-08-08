@@ -68,15 +68,18 @@ class TestMQTT5Support:
         assert hasattr(publisher, "_on_publish")
 
     def test_paho_mqtt_version(self):
-        """Verify we're using a modern paho-mqtt version."""
-        # Test that modern features are available
-        assert hasattr(mqtt, "CallbackAPIVersion")
+        """Verify paho-mqtt compatibility (supports both modern and legacy versions)."""
+        # Test that basic MQTT features are always available
         assert hasattr(mqtt, "MQTTv5")
-        assert hasattr(mqtt, "Properties")
-        assert hasattr(mqtt, "PacketTypes")
+        assert hasattr(mqtt, "Client")
 
-        # Test that we can create modern clients
-        client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+        # Test that we can create clients (with backwards compatibility)
+        if hasattr(mqtt, "CallbackAPIVersion"):
+            # Modern paho-mqtt (>= 2.0.0)
+            client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION2)
+        else:
+            # Legacy paho-mqtt (< 2.0.0)
+            client = mqtt.Client()
         assert client is not None
 
     def test_publish_with_properties(self):

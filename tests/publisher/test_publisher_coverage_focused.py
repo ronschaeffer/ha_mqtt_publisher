@@ -138,9 +138,14 @@ class TestPublisherCoverage90:
         result = publisher.publish("test/topic", "payload", properties=properties)
 
         assert result is True
-        # Verify properties were passed
+        # Verify properties were passed (only if MQTT Properties are available)
         call_args = mock_client.publish.call_args
-        assert "properties" in call_args[1]
+        import paho.mqtt.client as mqtt
+        if hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes'):
+            assert "properties" in call_args[1]
+        else:
+            # In legacy mode, properties should not be passed
+            assert "properties" not in call_args[1]
 
     def test_connection_error_messages(self):
         """Test various connection error message scenarios."""

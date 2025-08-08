@@ -93,7 +93,7 @@ class TestMQTTPublisherCoverage:
                 tls={"ca_cert": "ca.pem"},  # Missing client_cert and client_key
             )
 
-    @patch("src.mqtt_publisher.publisher.logging.warning")
+    @patch("mqtt_publisher.publisher.logging.warning")
     @patch("paho.mqtt.client.Client.tls_insecure_set")
     @patch("paho.mqtt.client.Client.tls_set")
     def test_validate_config_tls_port_warning(
@@ -110,7 +110,7 @@ class TestMQTTPublisherCoverage:
         mock_warning.assert_called_once()
         assert "TLS enabled but using non-TLS port 1883" in mock_warning.call_args[0][0]
 
-    @patch("src.mqtt_publisher.publisher.logging.warning")
+    @patch("mqtt_publisher.publisher.logging.warning")
     def test_validate_config_non_tls_port_warning(self, mock_warning):
         """Test validation warns about non-TLS with TLS port."""
         MQTTPublisher(
