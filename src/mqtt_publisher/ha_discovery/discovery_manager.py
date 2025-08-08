@@ -9,7 +9,7 @@ entity removal, updates, and discovery scanning.
 
 import json
 import logging
-from typing import Any
+from typing import Any, Union
 
 from .device import Device
 from .entity import Entity
@@ -240,7 +240,7 @@ class DiscoveryManager:
 
         return success
 
-    def get_entity_status(self, unique_id: str) -> dict[str, Any] | None:
+    def get_entity_status(self, unique_id: str) -> Union[dict[str, Any], None]:
         """
         Get status information for an entity.
 
