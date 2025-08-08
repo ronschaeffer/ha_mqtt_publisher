@@ -247,11 +247,20 @@ class MQTTPublisher:
 
         protocol_version = protocol_map.get(self.protocol, mqtt.MQTTv311)
 
-        self.client = mqtt.Client(
-            callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-            client_id=self.client_id,
-            protocol=protocol_version,
-        )
+        # Create MQTT client with backwards compatibility
+        if hasattr(mqtt, 'CallbackAPIVersion'):
+            # paho-mqtt >= 2.0.0 - use modern callback API
+            self.client = mqtt.Client(
+                callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+                client_id=self.client_id,
+                protocol=protocol_version,
+            )
+        else:
+            # paho-mqtt < 2.0.0 - use legacy API
+            self.client = mqtt.Client(
+                client_id=self.client_id,
+                protocol=protocol_version,
+            )
 
         # Configure Last Will and Testament
         if last_will:
@@ -455,7 +464,8 @@ class MQTTPublisher:
                 payload = json.dumps(payload)
 
             # Use MQTT 5.0 properties if provided and using MQTTv5
-            if properties and self.protocol == "MQTTv5":
+            if (properties and self.protocol == "MQTTv5" and
+                hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes')):
                 mqtt_properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)
                 for key, value in properties.items():
                     setattr(mqtt_properties, key, value)
@@ -501,7 +511,8 @@ class MQTTPublisher:
                 self.client.message_callback_add(topic, callback)
 
             # Use MQTT 5.0 properties if provided and using MQTTv5
-            if properties and self.protocol == "MQTTv5":
+            if (properties and self.protocol == "MQTTv5" and
+                hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes')):
                 mqtt_properties = mqtt.Properties(mqtt.PacketTypes.SUBSCRIBE)
                 for key, value in properties.items():
                     setattr(mqtt_properties, key, value)
@@ -540,7 +551,8 @@ class MQTTPublisher:
             self.client.message_callback_remove(topic)
 
             # Use MQTT 5.0 properties if provided and using MQTTv5
-            if properties and self.protocol == "MQTTv5":
+            if (properties and self.protocol == "MQTTv5" and
+                hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes')):
                 mqtt_properties = mqtt.Properties(mqtt.PacketTypes.UNSUBSCRIBE)
                 for key, value in properties.items():
                     setattr(mqtt_properties, key, value)
