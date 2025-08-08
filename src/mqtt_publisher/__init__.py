@@ -1,6 +1,6 @@
 """An MQTT publisher package with Home Assistant Discovery support"""
 
-__version__ = "0.1.3"
+__version__ = "0.2.0"
 __author__ = "ronschaeffer"
 __email__ = "ron@ronschaeffer.com"
 
