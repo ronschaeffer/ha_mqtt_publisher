@@ -388,7 +388,7 @@ class TestPublisherAdditionalCoverage:
         assert result is True
         mock_client.publish.assert_called_once()
         call_args = mock_client.publish.call_args
-        
+
         # Only check for properties if MQTT Properties are available (paho-mqtt >= 2.0.0)
         import paho.mqtt.client as mqtt
         if hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes'):
