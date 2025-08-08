@@ -10,9 +10,6 @@ This example shows the different ways to configure:
 The library supports both YAML/config files AND programmatic configuration.
 """
 
-import os
-from pathlib import Path
-
 # Method 1: Configuration via YAML files
 print("🔧 METHOD 1: YAML Configuration Files")
 print("=" * 50)
@@ -42,7 +39,7 @@ app:
   unique_id_prefix: "living_room_hub"
   manufacturer: "Smart Home Corp"
   model: "SensorHub Pro v2.1"
-  sw_version: "0.1.3-2ca60e7-dirty"
+  sw_version: "0.1.3-baf5c21-dirty"
   hw_version: "1.0"
   serial_number: "SH2024001"
 
@@ -52,7 +49,7 @@ home_assistant:
   discovery_prefix: "homeassistant"
 """
 
-print(f"\n📝 Example config.yaml content:")
+print("\n📝 Example config.yaml content:")
 print(yaml_broker_config)
 
 print("\n" + "=" * 50)

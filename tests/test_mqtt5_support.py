@@ -1,7 +1,6 @@
 """Test MQTT 5.0 support and modern paho-mqtt features."""
 
 import paho.mqtt.client as mqtt
-import pytest
 
 from mqtt_publisher.publisher import MQTTPublisher
 

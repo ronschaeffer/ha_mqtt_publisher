@@ -30,6 +30,18 @@ class MQTTPublisher:
         config: Complete configuration dictionary (alternative to individual params)
         protocol: MQTT protocol version ('MQTTv31', 'MQTTv311', 'MQTTv5')
         properties: MQTT 5.0 properties for connection
+        default_qos: Default QoS level for publish operations (0-2)
+        default_retain: Default retain flag for publish operations
+        logging_config: Enhanced logging configuration with levels for different modules
+            Example: {
+                "connection_level": "DEBUG",
+                "publish_level": "INFO",
+                "discovery_level": "WARNING",
+                "topic_specific": {
+                    "sensors/*": "DEBUG",
+                    "status": "INFO"
+                }
+            }
     """
 
     def _convert_port(self, port: int | str | None) -> int:
@@ -105,6 +117,59 @@ class MQTTPublisher:
                 + "\n".join(f"- {error}" for error in errors)
             )
 
+    def _setup_enhanced_logging(self) -> None:
+        """Set up enhanced logging based on configuration."""
+        # Get logging configuration with defaults
+        connection_level = self.logging_config.get("connection_level", "INFO")
+        publish_level = self.logging_config.get("publish_level", "INFO")
+        discovery_level = self.logging_config.get("discovery_level", "INFO")
+        topic_specific = self.logging_config.get("topic_specific", {})
+
+        # Create module-specific loggers if configured
+        if connection_level != "INFO":
+            self.connection_logger = logging.getLogger(f"{__name__}.connection")
+            self.connection_logger.setLevel(getattr(logging, connection_level.upper()))
+        else:
+            self.connection_logger = logging.getLogger(__name__)
+
+        if publish_level != "INFO":
+            self.publish_logger = logging.getLogger(f"{__name__}.publish")
+            self.publish_logger.setLevel(getattr(logging, publish_level.upper()))
+        else:
+            self.publish_logger = logging.getLogger(__name__)
+
+        if discovery_level != "INFO":
+            self.discovery_logger = logging.getLogger(f"{__name__}.discovery")
+            self.discovery_logger.setLevel(getattr(logging, discovery_level.upper()))
+        else:
+            self.discovery_logger = logging.getLogger(__name__)
+
+        # Store topic-specific logging configuration
+        self.topic_loggers = {}
+        for topic_pattern, level in topic_specific.items():
+            logger = logging.getLogger(f"{__name__}.topic.{topic_pattern}")
+            logger.setLevel(getattr(logging, level.upper()))
+            self.topic_loggers[topic_pattern] = logger
+
+    def _get_topic_logger(self, topic: str) -> logging.Logger:
+        """Get appropriate logger for a specific topic."""
+        # Check for exact match first
+        if topic in self.topic_loggers:
+            return self.topic_loggers[topic]
+
+        # Check for pattern matches (simple wildcard support)
+        for pattern, logger in self.topic_loggers.items():
+            if "*" in pattern:
+                # Simple wildcard matching
+                pattern_regex = pattern.replace("*", ".*")
+                import re
+
+                if re.match(pattern_regex, topic):
+                    return logger
+
+        # Default to publish logger
+        return self.publish_logger
+
     def __init__(
         self,
         broker_url: str | None = None,
@@ -118,11 +183,14 @@ class MQTTPublisher:
         config: dict | None = None,
         protocol: str = "MQTTv311",  # New: Support for MQTT protocol version
         properties: dict | None = None,  # New: MQTT 5.0 properties
+        default_qos: int = 0,  # New: Default QoS for publish operations
+        default_retain: bool = False,  # New: Default retain flag for publish operations
+        logging_config: dict | None = None,  # New: Enhanced logging configuration
     ):
         # Handle config dict parameter
         if config:
             self.broker_url = config["broker_url"]
-            self.broker_port = self._convert_port(config["broker_port"])
+            self.broker_port = self._convert_port(config.get("broker_port"))
             self.client_id = config["client_id"]
             security = config.get("security", "none")
             auth = config.get("auth")
@@ -131,6 +199,9 @@ class MQTTPublisher:
             last_will = config.get("last_will")
             self.protocol = config.get("protocol", protocol)
             self.properties = config.get("properties", properties)
+            self.default_qos = config.get("default_qos", default_qos)
+            self.default_retain = config.get("default_retain", default_retain)
+            self.logging_config = config.get("logging_config", logging_config or {})
         else:
             # Use individual parameters (existing behavior)
             self.broker_url = broker_url
@@ -138,17 +209,32 @@ class MQTTPublisher:
             self.client_id = client_id
             self.protocol = protocol
             self.properties = properties or {}
+            self.default_qos = default_qos
+            self.default_retain = default_retain
+            self.logging_config = logging_config or {}
 
         self.security = security
         self.auth = auth or {}
         self.tls = tls
         self.max_retries = max_retries
         self._connected = False
+        self._loop_running = False  # Track background loop state
 
         # Validate configuration
         self._validate_config()
 
-        # Type assertions for type checker (validation ensures these are not None)
+        # Set up enhanced logging
+        self._setup_enhanced_logging()
+
+        # Validate default QoS
+        if not (0 <= self.default_qos <= 2):
+            raise ValueError(f"default_qos must be 0, 1, or 2, got: {self.default_qos}")
+
+        # Validate default retain
+        if not isinstance(self.default_retain, bool):
+            raise ValueError(
+                f"default_retain must be boolean, got: {self.default_retain}"
+            )  # Type assertions for type checker (validation ensures these are not None)
         assert self.broker_url is not None, "broker_url validated to be not None"
         assert self.client_id is not None, "client_id validated to be not None"
 
@@ -211,15 +297,15 @@ class MQTTPublisher:
 
         error_messages = {
             0: "Connection successful",
-            1: "Connection refused - incorrect protocol version",
-            2: "Connection refused - invalid client identifier",
+            1: "Connection refused - unacceptable protocol version",
+            2: "Connection refused - identifier rejected",
             3: "Connection refused - server unavailable",
             4: "Connection refused - bad username or password",
             5: "Connection refused - not authorized",
         }
 
         base_message = error_messages.get(
-            error_code_int, f"Connection failed with error code: {error_code}"
+            error_code_int, f"Unknown connection error: {error_code}"
         )
 
         # Add specific guidance for common misconfigurations
@@ -234,66 +320,109 @@ class MQTTPublisher:
     def _on_connect(self, client, userdata, flags, reason_code, properties):
         if reason_code == 0:
             self._connected = True
-            logging.info("Connected to MQTT broker")
+            self.connection_logger.info("Connected to MQTT broker")
         else:
             error_msg = self._get_connection_error_message(reason_code)
-            logging.error(error_msg)
+            self.connection_logger.error(error_msg)
 
     def _on_disconnect(self, client, userdata, flags, reason_code, properties):
         self._connected = False
         if reason_code != 0:
-            logging.warning(f"Unexpected disconnection {reason_code}")
+            self.connection_logger.warning(f"Unexpected disconnection {reason_code}")
 
     def _on_publish(self, client, userdata, mid, reason_codes, properties):
-        logging.debug(f"Message published with ID: {mid}")
+        self.publish_logger.debug(f"Message published with ID: {mid}")
 
     def connect(self) -> bool:
-        """Connect to the MQTT broker with retry logic."""
+        """Connect to the MQTT broker with exponential backoff retry logic."""
         # Type assertions for type checker (validation ensures these are not None)
         assert self.broker_url is not None
         assert isinstance(self.broker_port, int)
 
         retries = 0
+        base_delay = 1  # Start with 1 second delay
+        max_delay = 60  # Maximum delay of 60 seconds
+
         while retries < self.max_retries:
             try:
-                logging.info(
-                    "Attempting connection to %s:%d",
+                self.connection_logger.info(
+                    "Attempting connection to %s:%d (attempt %d/%d)",
                     self.broker_url,
                     self.broker_port,
+                    retries + 1,
+                    self.max_retries,
                 )
-                self.client.connect(self.broker_url, self.broker_port, keepalive=60)
+                result = self.client.connect(
+                    self.broker_url, self.broker_port, keepalive=60
+                )
+
+                # Check if connect call itself failed
+                if result != 0:
+                    raise Exception(f"MQTT connect() returned error code: {result}")
+
                 self.client.loop_start()
-                # Wait for connection
+
+                # If already connected (mock scenario or immediate connection), return success
+                if self._connected:
+                    self.connection_logger.info("Successfully connected to MQTT broker")
+                    return True
+
+                # Wait for connection callback
                 timeout = 5
                 start_time = time.time()
                 while not self._connected and (time.time() - start_time) < timeout:
                     time.sleep(0.1)
                 if self._connected:
+                    self.connection_logger.info("Successfully connected to MQTT broker")
                     return True
-                logging.warning("Connection timeout")
-            except Exception as e:
-                logging.error(
-                    "Connection attempt %d failed: %s", retries + 1, e, exc_info=True
+                self.connection_logger.warning(
+                    "Connection timeout after %d seconds", timeout
                 )
-                retries += 1
-                if retries < self.max_retries:
-                    time.sleep(2)  # Wait before retry
+            except Exception as e:
+                self.connection_logger.error(
+                    "Connection attempt %d/%d failed: %s",
+                    retries + 1,
+                    self.max_retries,
+                    e,
+                    exc_info=True,
+                )
+
+            retries += 1
+            if retries < self.max_retries:
+                # Exponential backoff with jitter
+                delay = min(base_delay * (2 ** (retries - 1)), max_delay)
+                # Add some jitter (±25% of the delay)
+                import random
+
+                jitter = delay * 0.25 * (random.random() * 2 - 1)
+                actual_delay = max(0.5, delay + jitter)
+
+                self.connection_logger.info(
+                    "Retrying in %.1f seconds (exponential backoff)...", actual_delay
+                )
+                time.sleep(actual_delay)
+
+        self.connection_logger.error(
+            "Failed to connect after %d attempts with exponential backoff",
+            self.max_retries,
+        )
         return False
 
     def disconnect(self) -> None:
         """Disconnect from the MQTT broker."""
         if self._connected:
             self.client.loop_stop()
+            self._loop_running = False
             self.client.disconnect()
             self._connected = False
-            logging.info("Disconnected from MQTT broker")
+            self.connection_logger.info("Disconnected from MQTT broker")
 
     def publish(
         self,
         topic: str,
         payload: Any,
-        qos: int = 0,
-        retain: bool = False,
+        qos: int | None = None,
+        retain: bool | None = None,
         properties: dict | None = None,
     ) -> bool:
         """Publish a payload to a topic.
@@ -301,16 +430,25 @@ class MQTTPublisher:
         Args:
             topic: The MQTT topic
             payload: The message payload
-            qos: Quality of service (0-2)
-            retain: Whether to retain the message
+            qos: Quality of service (0-2). If None, uses default_qos
+            retain: Whether to retain the message. If None, uses default_retain
             properties: MQTT 5.0 properties (only used with MQTTv5)
 
         Returns:
             bool: Success status
         """
         if not self._connected:
-            logging.error("Not connected to broker")
+            topic_logger = self._get_topic_logger(topic)
+            topic_logger.error(f"Not connected to broker when publishing to {topic}")
             return False
+
+        # Use defaults if not specified
+        if qos is None:
+            qos = self.default_qos
+        if retain is None:
+            retain = self.default_retain
+
+        topic_logger = self._get_topic_logger(topic)
 
         try:
             if isinstance(payload, dict | list):
@@ -328,13 +466,15 @@ class MQTTPublisher:
                 result = self.client.publish(topic, payload, qos=qos, retain=retain)
 
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logging.info("Published message to topic '%s'", topic)
+                self.publish_logger.info(
+                    f"Published message to topic '{topic}' (QoS: {qos}, Retain: {retain})"
+                )
                 return True
             else:
-                logging.error(f"Failed to publish message: {result.rc}")
+                topic_logger.error(f"Failed to publish message to {topic}: {result.rc}")
                 return False
         except Exception as e:
-            logging.error(f"Error publishing message: {e}")
+            topic_logger.error(f"Error publishing message to {topic}: {e}")
             return False
 
     def subscribe(
@@ -443,6 +583,46 @@ class MQTTPublisher:
             topic_filter: MQTT topic filter to remove callback for
         """
         self.client.message_callback_remove(topic_filter)
+
+    def is_loop_running(self) -> bool:
+        """Check if the background loop is currently running.
+
+        Returns:
+            True if background loop is active, False otherwise
+        """
+        # Since paho-mqtt doesn't provide a direct way to check loop status,
+        # we'll track it ourselves using a simple instance variable
+        if not hasattr(self, "_loop_running"):
+            self._loop_running = False
+        return self._loop_running
+
+    def loop_start(self) -> None:
+        """Start the network loop in a background thread for non-blocking operation.
+
+        This allows the MQTT client to process network traffic (publish/subscribe)
+        in the background without blocking the main application thread.
+        """
+        try:
+            self.client.loop_start()
+            self._loop_running = True
+            self.connection_logger.info("Started MQTT background loop")
+        except Exception as e:
+            self.connection_logger.error(f"Failed to start MQTT loop: {e}")
+            raise
+
+    def loop_stop(self) -> None:
+        """Stop the background network loop.
+
+        This stops the background thread and forces all network operations
+        to be processed synchronously (blocking).
+        """
+        try:
+            self.client.loop_stop()
+            self._loop_running = False
+            self.connection_logger.info("Stopped MQTT background loop")
+        except Exception as e:
+            self.connection_logger.error(f"Failed to stop MQTT loop: {e}")
+            raise
 
     def __enter__(self):
         if not self.connect():

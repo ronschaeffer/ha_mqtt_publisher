@@ -4,8 +4,6 @@
 Test MQTT 5.0 functionality to verify the implementation works correctly.
 """
 
-import time
-
 from mqtt_publisher import MQTTPublisher
 
 

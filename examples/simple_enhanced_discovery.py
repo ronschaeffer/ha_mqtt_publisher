@@ -38,11 +38,11 @@ def main():
         name="Smart Room Controller",
         manufacturer="Example Corp",
         model="Room-1000",
-        sw_version="0.1.3-2ca60e7-dirty",  # Now supported!
+        sw_version="0.1.3-baf5c21-dirty",  # Now supported!
         configuration_url="http://192.168.1.50:8080",  # Now supported!
     )
 
-    print(f"Created device with enhanced info:")
+    print("Created device with enhanced info:")
     print(f"  Name: {device.name}")
     print(f"  Manufacturer: {device.manufacturer}")
     print(f"  Model: {device.model}")

@@ -8,11 +8,6 @@ This shows a complete example of how a user would configure:
 3. Entities (code only)
 """
 
-from src.mqtt_publisher.config import Config
-from src.mqtt_publisher.ha_discovery import Device, DiscoveryManager, Entity
-from src.mqtt_publisher.ha_discovery.entity import BinarySensor, Light, Sensor
-from src.mqtt_publisher.publisher import MQTTPublisher
-
 
 def demonstrate_yaml_config():
     """Show how configuration works with YAML files."""
@@ -36,7 +31,7 @@ app:
   unique_id_prefix: "sensor_hub"
   manufacturer: "DIY Smart Home"
   model: "ESP32 Hub v1.0"
-  sw_version: "0.1.3-2ca60e7-dirty"
+  sw_version: "0.1.3-baf5c21-dirty"
 
 home_assistant:
   enabled: true
@@ -72,12 +67,12 @@ entities = [
            name="Temperature", unique_id="hub_temp",
            state_topic="smart_home/sensors/temperature",
            device_class="temperature", unit_of_measurement="°C"),
-    
+
     BinarySensor(config=config, device=device,
-                name="Motion", unique_id="hub_motion", 
+                name="Motion", unique_id="hub_motion",
                 state_topic="smart_home/sensors/motion",
                 device_class="motion"),
-    
+
     Light(config=config, device=device,
           name="Status LED", unique_id="hub_led",
           state_topic="smart_home/lights/status/state",
@@ -133,7 +128,7 @@ greenhouse_device = Device(
 
 irrigation_device = Device(
     config=config,
-    name="Irrigation System", 
+    name="Irrigation System",
     identifiers=["irrigation_001"],
     model="Smart Sprinkler v1"
 )
@@ -144,10 +139,10 @@ greenhouse_entities = [
            component="sensor", name="Soil Moisture",
            state_topic="greenhouse/soil/moisture",
            device_class="moisture", unit_of_measurement="%"),
-    
+
     Entity(config=config, device=greenhouse_device,
            component="sensor", name="Light Level",
-           state_topic="greenhouse/light/level", 
+           state_topic="greenhouse/light/level",
            device_class="illuminance", unit_of_measurement="lx")
 ]
 
@@ -156,7 +151,7 @@ irrigation_entities = [
            component="switch", name="Zone 1 Sprinkler",
            state_topic="irrigation/zone1/state",
            command_topic="irrigation/zone1/command"),
-    
+
     Entity(config=config, device=irrigation_device,
            component="sensor", name="Water Pressure",
            state_topic="irrigation/pressure",
@@ -184,7 +179,7 @@ def show_configuration_summary():
 WHAT TO CONFIGURE          | YAML FILE | PROGRAMMATIC | BEST PRACTICE
 ---------------------------|-----------|--------------|---------------
 MQTT Broker URL/Port       |    ✅     |      ✅      | YAML + ENV vars
-MQTT Credentials          |    ✅     |      ✅      | YAML + ENV vars  
+MQTT Credentials          |    ✅     |      ✅      | YAML + ENV vars
 TLS/Security Settings     |    ✅     |      ✅      | YAML
 Device Defaults           |    ✅     |      ✅      | YAML defaults
 Device Instances          |    ❌     |      ✅      | Code only
@@ -204,7 +199,7 @@ Runtime Changes           |    ❌     |      ✅      | Code only
 config.yaml (app section)
     ↓ (provides defaults)
 Device(config=config, **overrides)
-    ↓ (provides device context)  
+    ↓ (provides device context)
 Entity(config=config, device=device, **specific_attrs)
 """
     print(inheritance)

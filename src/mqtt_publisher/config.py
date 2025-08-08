@@ -23,6 +23,9 @@ class MQTTConfig:
             tls: TLS configuration dictionary
             max_retries: Maximum connection retries (default: 3)
             last_will: Last Will and Testament configuration
+            default_qos: Default QoS level for publish operations (default: 0)
+            default_retain: Default retain flag for publish operations (default: False)
+            logging_config: Enhanced logging configuration dictionary
 
         Returns:
             Complete MQTT configuration dictionary
@@ -44,12 +47,28 @@ class MQTTConfig:
         else:
             max_retries = int(max_retries)
 
+        # Handle default_qos conversion with proper defaults
+        default_qos = kwargs.get("default_qos")
+        if default_qos is None:
+            default_qos = 0
+        else:
+            default_qos = int(default_qos)
+            if not (0 <= default_qos <= 2):
+                raise ValueError(f"default_qos must be 0, 1, or 2, got: {default_qos}")
+
+        # Handle default_retain conversion with proper defaults
+        default_retain = kwargs.get("default_retain", False)
+        if isinstance(default_retain, str):
+            default_retain = default_retain.lower() in ("true", "1", "yes", "on")
+
         config = {
             "broker_url": kwargs.get("broker_url"),
             "broker_port": broker_port,
             "client_id": kwargs.get("client_id") or "mqtt_client",
             "security": kwargs.get("security") or "none",
             "max_retries": max_retries,
+            "default_qos": default_qos,
+            "default_retain": default_retain,
         }
 
         # Handle authentication
@@ -70,6 +89,11 @@ class MQTTConfig:
         last_will = kwargs.get("last_will")
         if last_will:
             config["last_will"] = last_will
+
+        # Handle logging configuration
+        logging_config = kwargs.get("logging_config")
+        if logging_config:
+            config["logging_config"] = logging_config
 
         # Validate required fields
         if not config["broker_url"]:
@@ -118,6 +142,9 @@ class MQTTConfig:
             tls=mqtt_section.get("tls"),
             max_retries=mqtt_section.get("max_retries"),
             last_will=mqtt_section.get("last_will"),
+            default_qos=mqtt_section.get("default_qos"),
+            default_retain=mqtt_section.get("default_retain"),
+            logging_config=mqtt_section.get("logging_config"),
         )
 
     @staticmethod

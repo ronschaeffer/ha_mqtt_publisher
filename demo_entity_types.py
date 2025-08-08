@@ -6,7 +6,6 @@ This example shows how the MQTT library supports all major Home Assistant
 entity types through both specialized classes and the flexible base Entity class.
 """
 
-from src.mqtt_publisher.config import Config
 from src.mqtt_publisher.ha_discovery import Device, Entity
 from src.mqtt_publisher.ha_discovery.entity import (
     AlarmControlPanel,

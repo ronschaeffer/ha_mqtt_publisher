@@ -192,10 +192,8 @@ class TestMQTTPublisherErrorHandling:
 
         # Test various error codes
         assert "Connection successful" in publisher._get_connection_error_message(0)
-        assert "incorrect protocol version" in publisher._get_connection_error_message(
-            1
-        )
-        assert "invalid client identifier" in publisher._get_connection_error_message(2)
+        assert "protocol version" in publisher._get_connection_error_message(1)
+        assert "identifier rejected" in publisher._get_connection_error_message(2)
         assert "server unavailable" in publisher._get_connection_error_message(3)
         assert "bad username or password" in publisher._get_connection_error_message(4)
         assert "not authorized" in publisher._get_connection_error_message(5)
@@ -232,7 +230,7 @@ class TestMQTTPublisherErrorHandling:
         )
 
         error_msg = publisher._get_connection_error_message(99)
-        assert "Connection failed with error code: 99" in error_msg
+        assert "Unknown connection error: 99" in error_msg
 
 
 class TestMQTTPublisherSecurityConfiguration:

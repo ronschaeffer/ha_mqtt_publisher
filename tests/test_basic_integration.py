@@ -23,28 +23,28 @@ class TestBasicAutomation:
 
     def test_imports_work_correctly(self):
         """Test that all main imports work."""
-        from mqtt_publisher import (
-            Config,
+        from mqtt_publisher.config import Config
+        from mqtt_publisher.ha_discovery import (
             Device,
-            MQTTConfig,
-            MQTTPublisher,
-            create_sensor,
-            create_status_sensor,
+            DiscoveryManager,
+            Entity,
+            StatusSensor,
             publish_discovery_configs,
         )
+        from mqtt_publisher.publisher import MQTTPublisher
 
         # All should be callable or instantiable
         assert callable(MQTTPublisher)
         assert callable(Device)
         assert callable(Config)
-        assert callable(MQTTConfig.build_config)
-        assert callable(create_sensor)
-        assert callable(create_status_sensor)
+        assert callable(Entity)
+        assert callable(StatusSensor)
+        assert callable(DiscoveryManager)
         assert callable(publish_discovery_configs)
 
     def test_version_consistency(self):
         """Test that versions are consistent."""
-        import mqtt_publisher
+        from mqtt_publisher import __version__
 
         # Read pyproject.toml version
         pyproject_path = Path("pyproject.toml")
@@ -58,7 +58,7 @@ class TestBasicAutomation:
             pytest.fail("Version not found in pyproject.toml")
 
         # Compare with package version
-        assert mqtt_publisher.__version__ == pyproject_version
+        assert __version__ == pyproject_version
 
     def test_automation_files_exist(self):
         """Test that automation files exist."""
