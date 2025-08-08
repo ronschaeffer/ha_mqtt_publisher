@@ -3,14 +3,14 @@
 import json
 from unittest.mock import Mock
 
-from src.mqtt_publisher.ha_discovery.device import Device
-from src.mqtt_publisher.ha_discovery.entity import Sensor
-from src.mqtt_publisher.ha_discovery.publisher import (
+from mqtt_publisher.ha_discovery.device import Device
+from mqtt_publisher.ha_discovery.entity import Sensor
+from mqtt_publisher.ha_discovery.publisher import (
     create_sensor,
     create_status_sensor,
     publish_discovery_configs,
 )
-from src.mqtt_publisher.ha_discovery.status_sensor import StatusSensor
+from mqtt_publisher.ha_discovery.status_sensor import StatusSensor
 
 
 class MockConfig:

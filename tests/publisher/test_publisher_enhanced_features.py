@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.mqtt_publisher.publisher import MQTTPublisher
+from mqtt_publisher.publisher import MQTTPublisher
 
 
 class TestPublisherEnhancedFeatures:

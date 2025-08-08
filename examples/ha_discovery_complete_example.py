@@ -77,7 +77,7 @@ def main():
         name="Weather Station",
         model="WS-1000",
         manufacturer="Example Corp",
-        sw_version="0.1.3-baf5c21-dirty",
+        sw_version="0.1.3-2e988e2-dirty",
         configuration_url="http://weather-station.local/config",
     )
     device = device_config  # For backward compatibility with examples below

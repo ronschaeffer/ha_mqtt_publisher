@@ -50,7 +50,7 @@ def create_comprehensive_device(config: Config) -> Device:
         name="Smart Home Hub",
         manufacturer="Example Corp",
         model="Hub Pro v2",
-        sw_version="0.1.3-baf5c21-dirty",
+        sw_version="0.1.3-2e988e2-dirty",
         hw_version="1.4",
         serial_number="SH001234567",
         configuration_url="http://192.168.1.100:8080/config",

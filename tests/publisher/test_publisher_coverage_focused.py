@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, patch
 
-from src.mqtt_publisher.publisher import MQTTPublisher
+from mqtt_publisher.publisher import MQTTPublisher
 
 
 class TestPublisherCoverage90:

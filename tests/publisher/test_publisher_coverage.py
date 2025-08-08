@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.mqtt_publisher.publisher import MQTTPublisher
+from mqtt_publisher.publisher import MQTTPublisher
 
 
 class TestMQTTPublisherCoverage:

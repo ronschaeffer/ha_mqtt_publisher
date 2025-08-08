@@ -31,7 +31,7 @@ app:
   unique_id_prefix: "sensor_hub"
   manufacturer: "DIY Smart Home"
   model: "ESP32 Hub v1.0"
-  sw_version: "0.1.3-baf5c21-dirty"
+  sw_version: "0.1.3-2e988e2-dirty"
 
 home_assistant:
   enabled: true

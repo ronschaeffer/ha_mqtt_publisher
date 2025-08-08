@@ -2,9 +2,9 @@
 
 from unittest.mock import Mock
 
-from src.mqtt_publisher.ha_discovery.device import Device
-from src.mqtt_publisher.ha_discovery.discovery_manager import DiscoveryManager
-from src.mqtt_publisher.ha_discovery.entity import Entity
+from mqtt_publisher.ha_discovery.device import Device
+from mqtt_publisher.ha_discovery.discovery_manager import DiscoveryManager
+from mqtt_publisher.ha_discovery.entity import Entity
 
 
 class MockConfig:
