@@ -391,7 +391,8 @@ class TestPublisherAdditionalCoverage:
 
         # Only check for properties if MQTT Properties are available (paho-mqtt >= 2.0.0)
         import paho.mqtt.client as mqtt
-        if hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes'):
+
+        if hasattr(mqtt, "Properties") and hasattr(mqtt, "PacketTypes"):
             assert "properties" in call_args[1]
         else:
             # In legacy mode, properties should not be passed

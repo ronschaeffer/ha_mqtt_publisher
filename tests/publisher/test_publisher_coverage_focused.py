@@ -141,7 +141,8 @@ class TestPublisherCoverage90:
         # Verify properties were passed (only if MQTT Properties are available)
         call_args = mock_client.publish.call_args
         import paho.mqtt.client as mqtt
-        if hasattr(mqtt, 'Properties') and hasattr(mqtt, 'PacketTypes'):
+
+        if hasattr(mqtt, "Properties") and hasattr(mqtt, "PacketTypes"):
             assert "properties" in call_args[1]
         else:
             # In legacy mode, properties should not be passed
