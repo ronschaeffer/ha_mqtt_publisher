@@ -38,7 +38,7 @@ def main():
         name="Smart Room Controller",
         manufacturer="Example Corp",
         model="Room-1000",
-        sw_version="0.2.0-d34705d-dirty",  # Now supported!
+        sw_version="0.2.0-9699ca8-dirty",  # Now supported!
         configuration_url="http://192.168.1.50:8080",  # Now supported!
     )
 
