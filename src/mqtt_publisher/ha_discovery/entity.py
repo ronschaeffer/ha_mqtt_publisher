@@ -6,9 +6,39 @@ Entity classes for Home Assistant MQTT Discovery.
 This module provides the base Entity class and specialized entity types
 for creating Home Assistant MQTT discovery configurations. The library
 supports all Home Assistant entity types through a flexible approach.
+
+Includes light validation for HA-compatible fields to improve
+interoperability (entity_category, availability_mode, state_class for sensors,
+and device_class for binary_sensors). Validation is non-fatal (warnings only)
+to avoid breaking existing configurations.
 """
 
+import logging
+import re
+
+from .constants import (
+    AVAILABILITY_MODES,
+    BINARY_SENSOR_DEVICE_CLASSES,
+    ENTITY_CATEGORIES,
+    SENSOR_STATE_CLASSES,
+)
 from .device import Device
+
+logger = logging.getLogger(__name__)
+
+"""Allowed values are imported from constants for single source of truth."""
+
+
+def _slugify_object_id(value: str) -> str:
+    """Create a HA-friendly object_id: lowercase, alnum+underscore only."""
+    value = value.strip().lower()
+    # Replace spaces and separators with underscores
+    value = re.sub(r"[\s\-]+", "_", value)
+    # Remove invalid chars
+    value = re.sub(r"[^a-z0-9_]", "", value)
+    # Collapse multiple underscores
+    value = re.sub(r"_+", "_", value).strip("_")
+    return value or "entity"
 
 
 class Entity:
@@ -68,6 +98,40 @@ class Entity:
             if not hasattr(self, key) and not key.startswith("_"):
                 self.extra_attributes[key] = value
 
+        # Light-touch validation for better HA compatibility
+        if self.entity_category and self.entity_category not in ENTITY_CATEGORIES:
+            logger.warning(
+                "entity_category '%s' is not one of %s",
+                self.entity_category,
+                ENTITY_CATEGORIES,
+            )
+        if self.availability_mode and self.availability_mode not in AVAILABILITY_MODES:
+            logger.warning(
+                "availability_mode '%s' is not one of %s",
+                self.availability_mode,
+                AVAILABILITY_MODES,
+            )
+        if (
+            self.component == "sensor"
+            and self.state_class
+            and self.state_class not in SENSOR_STATE_CLASSES
+        ):
+            logger.warning(
+                "sensor.state_class '%s' is not one of %s",
+                self.state_class,
+                SENSOR_STATE_CLASSES,
+            )
+        if (
+            self.component == "binary_sensor"
+            and self.device_class
+            and self.device_class not in BINARY_SENSOR_DEVICE_CLASSES
+        ):
+            logger.warning(
+                "binary_sensor.device_class '%s' is not one of %s",
+                self.device_class,
+                BINARY_SENSOR_DEVICE_CLASSES,
+            )
+
     def get_config_topic(self) -> str:
         """
         Generates the MQTT topic for publishing the entity's discovery configuration.
@@ -82,12 +146,14 @@ class Entity:
         """Returns the complete configuration payload for this entity."""
         # Construct a globally unique ID and a clean object ID
         prefix = self._config.get("app.unique_id_prefix", "mqtt_publisher")
-        object_id = f"{prefix}_{self.unique_id}"
+        computed_uid = f"{prefix}_{self.unique_id}"
+        safe_object_id = _slugify_object_id(computed_uid)
 
         payload = {
             "name": self.name,
-            "unique_id": object_id,
-            "object_id": object_id,  # Always include object_id for clean entity_id
+            # Preserve unique_id for registry stability; slugify object_id only
+            "unique_id": computed_uid,
+            "object_id": safe_object_id,
             "device": self.device.get_device_info(),
         }
 
