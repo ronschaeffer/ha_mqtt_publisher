@@ -129,3 +129,6 @@ __pypackages__/
 
 output/
 config.yaml
+
+# Project archive (do not track)
+.archive/
