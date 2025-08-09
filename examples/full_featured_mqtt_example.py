@@ -124,7 +124,7 @@ class FullFeaturedMQTTApplication:
             identifiers=["mqtt_device_001"],
             manufacturer="MQTT Publisher Library",
             model="Full-Featured Device v2.0",
-            sw_version="0.2.0-e8b4b8c-dirty",
+            sw_version="0.2.0-f44b5fc-dirty",
             hw_version="1.0",
             configuration_url="http://192.168.1.100:8080/config",
             connections=[["ip", "192.168.1.100"], ["mac", "AA:BB:CC:DD:EE:FF"]],

@@ -132,3 +132,6 @@ config.yaml
 
 # Project archive (do not track)
 .archive/
+
+# Project archive (do not track)
+.archive/
