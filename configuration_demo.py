@@ -39,7 +39,7 @@ app:
   unique_id_prefix: "living_room_hub"
   manufacturer: "Smart Home Corp"
   model: "SensorHub Pro v2.1"
-  sw_version: "0.2.0-a735d30-dirty"
+  sw_version: "0.2.0-cd3b24e-dirty"
   hw_version: "1.0"
   serial_number: "SH2024001"
 

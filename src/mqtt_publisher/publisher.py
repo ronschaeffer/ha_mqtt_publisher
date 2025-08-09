@@ -2,7 +2,7 @@ import json
 import logging
 import ssl
 import time
-from typing import Any, Union
+from typing import Any
 
 import paho.mqtt.client as mqtt
 
@@ -44,7 +44,7 @@ class MQTTPublisher:
             }
     """
 
-    def _convert_port(self, port: Union[int, str, None]) -> int:
+    def _convert_port(self, port: int | str | None) -> int:
         """Convert port to integer, handling string conversion."""
         if port is None:
             return 1883  # Default MQTT port
@@ -172,20 +172,20 @@ class MQTTPublisher:
 
     def __init__(
         self,
-        broker_url: Union[str, None] = None,
-        broker_port: Union[int, str, None] = None,
-        client_id: Union[str, None] = None,
+        broker_url: str | None = None,
+        broker_port: int | str | None = None,
+        client_id: str | None = None,
         security: str = "none",
-        auth: Union[dict, None] = None,
-        tls: Union[dict, None] = None,
+        auth: dict | None = None,
+        tls: dict | None = None,
         max_retries: int = 3,
-        last_will: Union[dict, None] = None,
-        config: Union[dict, None] = None,
+        last_will: dict | None = None,
+        config: dict | None = None,
         protocol: str = "MQTTv311",  # New: Support for MQTT protocol version
-        properties: Union[dict, None] = None,  # New: MQTT 5.0 properties
+        properties: dict | None = None,  # New: MQTT 5.0 properties
         default_qos: int = 0,  # New: Default QoS for publish operations
         default_retain: bool = False,  # New: Default retain flag for publish operations
-        logging_config: Union[dict, None] = None,  # New: Enhanced logging configuration
+        logging_config: dict | None = None,  # New: Enhanced logging configuration
     ):
         # Handle config dict parameter
         if config:
@@ -430,9 +430,9 @@ class MQTTPublisher:
         self,
         topic: str,
         payload: Any,
-        qos: Union[int, None] = None,
-        retain: Union[bool, None] = None,
-        properties: Union[dict, None] = None,
+        qos: int | None = None,
+        retain: bool | None = None,
+        properties: dict | None = None,
     ) -> bool:
         """Publish a payload to a topic.
 
@@ -460,7 +460,7 @@ class MQTTPublisher:
         topic_logger = self._get_topic_logger(topic)
 
         try:
-            if isinstance(payload, (dict, list)):
+            if isinstance(payload, dict | list):
                 payload = json.dumps(payload)
 
             # Use MQTT 5.0 properties if provided and using MQTTv5
@@ -496,7 +496,7 @@ class MQTTPublisher:
         topic: str,
         qos: int = 0,
         callback=None,
-        properties: Union[dict, None] = None,
+        properties: dict | None = None,
     ) -> bool:
         """Subscribe to an MQTT topic.
 
@@ -544,7 +544,7 @@ class MQTTPublisher:
             logging.error(f"Error subscribing to topic: {e}")
             return False
 
-    def unsubscribe(self, topic: str, properties: Union[dict, None] = None) -> bool:
+    def unsubscribe(self, topic: str, properties: dict | None = None) -> bool:
         """Unsubscribe from an MQTT topic.
 
         Args:

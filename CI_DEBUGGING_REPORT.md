@@ -1,8 +1,8 @@
 # CI Debugging Report: Multiple Rounds of Error Resolution
 
-**Project**: mqtt_publisher  
-**Date**: August 5, 2025  
-**Repository**: ronschaeffer/mqtt_publisher  
+**Project**: mqtt_publisher
+**Date**: August 5, 2025
+**Repository**: ronschaeffer/mqtt_publisher
 **Branch**: main
 
 ---
@@ -23,7 +23,7 @@ This report documents a comprehensive debugging session involving **four rounds*
 
 #### **Round 1: Import Sorting & Regex Pattern**
 
-**Duration**: Initial debugging phase  
+**Duration**: Initial debugging phase
 **Issues Found**:
 
 - **I001 Errors**: Import blocks un-sorted in test files
@@ -59,7 +59,7 @@ r'(\s*sw_version:\s*)["\'][^"\']*["\']'
 
 #### **Round 2: Whitespace & Type Modernization**
 
-**Duration**: Follow-up debugging after Round 1  
+**Duration**: Follow-up debugging after Round 1
 **Issues Found**:
 
 - **W293**: 40+ blank lines containing whitespace
@@ -88,7 +88,7 @@ scripts/sync_versions.py:20:1: UP035 `typing.Dict` is deprecated, use `dict` ins
 
 #### **Round 3: Test File Formatting**
 
-**Duration**: Immediate follow-up  
+**Duration**: Immediate follow-up
 **Issues Found**:
 
 - **Formatting Inconsistency**: `tests/test_scripts.py` not properly formatted
@@ -111,7 +111,7 @@ Would reformat: tests/test_scripts.py
 
 #### **Round 4: Version Updates & Final Cleanup**
 
-**Duration**: Final resolution phase  
+**Duration**: Final resolution phase
 **Issues Found**:
 
 - **Manual Version Updates**: Software version references manually updated
@@ -250,6 +250,6 @@ Would reformat: tests/test_scripts.py
 
 ---
 
-**Report Generated**: August 5, 2025  
-**Tools Used**: Ruff 0.12.7, Poetry, pytest, GitHub Actions  
+**Report Generated**: August 5, 2025
+**Tools Used**: Ruff 0.12.7, Poetry, pytest, GitHub Actions
 **Project Status**: ✅ Fully Resolved
