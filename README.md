@@ -148,6 +148,13 @@ ha_discovery:
     sw_version: "1.0.0"
 ```
 
+For more templates (including Home Assistant Discovery focused examples), see `config/README.md`:
+
+- `config.yaml.example` — basic MQTT configuration
+- `config_ha_discovery.yaml.example` — MQTT + Home Assistant Discovery
+- `ha_mqtt_discovery.yaml.example` — HA discovery components (YAML)
+- `ha_mqtt_discovery.json.example` — HA discovery components (JSON)
+
 ### Security Modes
 
 | Mode                   | Description                           | Required Settings                |
