@@ -20,6 +20,7 @@ from .constants import (
     AVAILABILITY_MODES,
     BINARY_SENSOR_DEVICE_CLASSES,
     ENTITY_CATEGORIES,
+    SENSOR_DEVICE_CLASSES,
     SENSOR_STATE_CLASSES,
 )
 from .device import Device
@@ -98,39 +99,46 @@ class Entity:
             if not hasattr(self, key) and not key.startswith("_"):
                 self.extra_attributes[key] = value
 
-        # Light-touch validation for better HA compatibility
+        # Validation for better HA compatibility (warnings by default)
+        strict = bool(self._config.get("home_assistant.strict_validation", False))
+
         if self.entity_category and self.entity_category not in ENTITY_CATEGORIES:
-            logger.warning(
-                "entity_category '%s' is not one of %s",
-                self.entity_category,
-                ENTITY_CATEGORIES,
-            )
+            msg = f"entity_category '{self.entity_category}' is not one of {ENTITY_CATEGORIES}"
+            if strict:
+                raise ValueError(msg)
+            logger.warning(msg)
         if self.availability_mode and self.availability_mode not in AVAILABILITY_MODES:
-            logger.warning(
-                "availability_mode '%s' is not one of %s",
-                self.availability_mode,
-                AVAILABILITY_MODES,
-            )
+            msg = f"availability_mode '{self.availability_mode}' is not one of {AVAILABILITY_MODES}"
+            if strict:
+                raise ValueError(msg)
+            logger.warning(msg)
         if (
             self.component == "sensor"
             and self.state_class
             and self.state_class not in SENSOR_STATE_CLASSES
         ):
-            logger.warning(
-                "sensor.state_class '%s' is not one of %s",
-                self.state_class,
-                SENSOR_STATE_CLASSES,
-            )
+            msg = f"sensor.state_class '{self.state_class}' is not one of {SENSOR_STATE_CLASSES}"
+            if strict:
+                raise ValueError(msg)
+            logger.warning(msg)
+        if (
+            self.component == "sensor"
+            and self.device_class
+            and self.device_class not in SENSOR_DEVICE_CLASSES
+        ):
+            msg = f"sensor.device_class '{self.device_class}' is not one of {SENSOR_DEVICE_CLASSES}"
+            if strict:
+                raise ValueError(msg)
+            logger.warning(msg)
         if (
             self.component == "binary_sensor"
             and self.device_class
             and self.device_class not in BINARY_SENSOR_DEVICE_CLASSES
         ):
-            logger.warning(
-                "binary_sensor.device_class '%s' is not one of %s",
-                self.device_class,
-                BINARY_SENSOR_DEVICE_CLASSES,
-            )
+            msg = f"binary_sensor.device_class '{self.device_class}' is not one of {BINARY_SENSOR_DEVICE_CLASSES}"
+            if strict:
+                raise ValueError(msg)
+            logger.warning(msg)
 
     def get_config_topic(self) -> str:
         """
