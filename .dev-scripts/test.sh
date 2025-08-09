@@ -1,28 +1,4 @@
 #!/bin/bash
-# Run tests for this project only
-
-# Set locale to avoid git warnings
-export LC_ALL=C.UTF-8
-export LANG=C.UTF-8
-
-# Colors
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m'
-
-echo -e "${BLUE}🧪 Testing 📡 MQTT Publisher...${NC}"
-
-# Activate virtual environment if it exists
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
-fi
-
-# Run pytest
-echo -e "${BLUE}🔬 Running pytest...${NC}"
-if pytest -v; then
-    echo -e "${GREEN}✅ All tests passed${NC}"
-else
-    echo -e "${RED}❌ Some tests failed${NC}"
-    exit 1
-fi
+# DEPRECATED: This helper has been archived. See .archive/.dev-scripts/test.sh
+>&2 echo "[DEPRECATED] Run tests via 'poetry run pytest'. Archived copy at .archive/.dev-scripts/test.sh"
+exit 1

@@ -268,6 +268,11 @@ except ValueError as e:
     # Output: broker_url is required
 ```
 
+## Examples
+
+- Explore runnable snippets in `examples/`.
+- Home Assistant MQTT Discovery: see `docs/README.md` and `config/README.md` for guidance and templates.
+
 ## Testing
 
 ### Run All Tests
