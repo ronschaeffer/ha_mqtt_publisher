@@ -26,15 +26,9 @@ Note
 
 ### Home Assistant Discovery Templates
 
-3. **`ha_mqtt_discovery.yaml.example`** - YAML template for HA discovery components
+3. (Archived) `ha_mqtt_discovery.yaml.example` — superseded by code-based HA discovery setup and the modern `config_ha_discovery.yaml.example`. See `.archive/` for the historical template.
 
-   - Device and component definitions
-   - Discovery topic structure
-   - Component configuration options
-
-4. **`ha_mqtt_discovery.json.example`** - JSON template for HA discovery components
-   - Same structure as YAML but in JSON format
-   - Useful for programmatic generation
+4. (Archived) `ha_mqtt_discovery.json.example` — superseded; HA discovery is typically configured in code via `mqtt_publisher.ha_discovery`. See `.archive/` for the historical template.
 
 ## Quick Start
 
