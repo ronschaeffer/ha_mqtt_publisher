@@ -67,6 +67,19 @@ fi
 
 print_status "Preparing $BUMP_TYPE release..."
 
+# Ensure Poetry is available and configuration is valid
+if ! command -v poetry >/dev/null 2>&1; then
+    print_error "Poetry is not installed or not on PATH. Please install Poetry and retry."
+    exit 1
+fi
+
+print_status "Poetry version: $(poetry --version)"
+print_status "Validating pyproject with 'poetry check'..."
+if ! poetry check; then
+    print_error "Poetry configuration is invalid. Fix pyproject.toml before releasing."
+    exit 1
+fi
+
 # Get current version from pyproject.toml
 current_version=$(poetry version --short)
 print_status "Current version: $current_version"
