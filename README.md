@@ -275,7 +275,7 @@ except ValueError as e:
 
 ## Home Assistant constants and type hints
 
-To help you stay compatible with Home Assistant without importing its internals, the library exposes a few constants and typing.Literal aliases in `mqtt_publisher.ha_discovery.constants`:
+To help you stay compatible with Home Assistant without importing its internals, the library exposes constants and typing.Literal aliases in `mqtt_publisher.ha_discovery.constants`:
 
 - Entity categories: `ENTITY_CATEGORIES`, `EntityCategory`
 - Availability modes: `AVAILABILITY_MODES`, `AvailabilityMode`
@@ -283,9 +283,34 @@ To help you stay compatible with Home Assistant without importing its internals,
 - Binary sensor device classes: `BINARY_SENSOR_DEVICE_CLASSES`, `BinarySensorDeviceClass`
 - Sensor device classes: `SENSOR_DEVICE_CLASSES`, `SensorDeviceClass`
 
-These are used for light-touch runtime validation (warnings by default). The values are strings, matching HA’s MQTT Discovery schema. You can pass plain strings; the Literals are optional hints for better editor support.
+Literals explained (like you’re in high school):
+- A Literal says “this value must be one of these exact strings.”
+- Your editor can autocomplete and warn if you type the wrong one.
+- At runtime, this library still uses plain strings for HA payloads.
 
-Strict validation (CI-only suggestion): set `home_assistant.strict_validation: true` in your config to escalate invalid values to errors. This is useful in CI to catch mismatches early while keeping production tolerant by default.
+Validation behavior:
+- Strict by default: invalid values raise a clear error early.
+- To relax to warnings only, set:
+
+```yaml
+home_assistant:
+    strict_validation: false
+```
+
+Supported components (ready to use classes):
+- sensor, binary_sensor, switch, light, cover, climate, fan, lock, number, select, text, button, device_tracker, alarm_control_panel, camera, vacuum, scene, siren
+
+Extensibility (add allowed values without code changes):
+
+```yaml
+home_assistant:
+    extra_allowed:
+        entity_categories: ["maintenance"]
+        availability_modes: ["first"]
+        sensor_state_classes: ["delta"]
+        sensor_device_classes: ["custom_power_quality"]
+        binary_sensor_device_classes: ["offline"]
+```
 
 References:
 - HA MQTT Discovery docs: https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery

@@ -99,43 +99,73 @@ class Entity:
             if not hasattr(self, key) and not key.startswith("_"):
                 self.extra_attributes[key] = value
 
-        # Validation for better HA compatibility (warnings by default)
-        strict = bool(self._config.get("home_assistant.strict_validation", False))
+        # Validation for better HA compatibility (strict by default)
+        strict = bool(self._config.get("home_assistant.strict_validation", True))
 
-        if self.entity_category and self.entity_category not in ENTITY_CATEGORIES:
-            msg = f"entity_category '{self.entity_category}' is not one of {ENTITY_CATEGORIES}"
+        # Allow users to extend allowed sets via config
+        extras = self._config.get("home_assistant.extra_allowed", {}) or {}
+
+        def _to_set(val):
+            if isinstance(val, list | set | tuple):
+                return set(val)
+            return set()
+
+        allowed_entity_categories = ENTITY_CATEGORIES | _to_set(
+            extras.get("entity_categories")
+        )
+        allowed_availability_modes = AVAILABILITY_MODES | _to_set(
+            extras.get("availability_modes")
+        )
+        allowed_sensor_state_classes = SENSOR_STATE_CLASSES | _to_set(
+            extras.get("sensor_state_classes")
+        )
+        allowed_sensor_device_classes = SENSOR_DEVICE_CLASSES | _to_set(
+            extras.get("sensor_device_classes")
+        )
+        allowed_binary_sensor_device_classes = BINARY_SENSOR_DEVICE_CLASSES | _to_set(
+            extras.get("binary_sensor_device_classes")
+        )
+
+        if (
+            self.entity_category
+            and self.entity_category not in allowed_entity_categories
+        ):
+            msg = f"entity_category '{self.entity_category}' is not one of {allowed_entity_categories}"
             if strict:
                 raise ValueError(msg)
             logger.warning(msg)
-        if self.availability_mode and self.availability_mode not in AVAILABILITY_MODES:
-            msg = f"availability_mode '{self.availability_mode}' is not one of {AVAILABILITY_MODES}"
+        if (
+            self.availability_mode
+            and self.availability_mode not in allowed_availability_modes
+        ):
+            msg = f"availability_mode '{self.availability_mode}' is not one of {allowed_availability_modes}"
             if strict:
                 raise ValueError(msg)
             logger.warning(msg)
         if (
             self.component == "sensor"
             and self.state_class
-            and self.state_class not in SENSOR_STATE_CLASSES
+            and self.state_class not in allowed_sensor_state_classes
         ):
-            msg = f"sensor.state_class '{self.state_class}' is not one of {SENSOR_STATE_CLASSES}"
+            msg = f"sensor.state_class '{self.state_class}' is not one of {allowed_sensor_state_classes}"
             if strict:
                 raise ValueError(msg)
             logger.warning(msg)
         if (
             self.component == "sensor"
             and self.device_class
-            and self.device_class not in SENSOR_DEVICE_CLASSES
+            and self.device_class not in allowed_sensor_device_classes
         ):
-            msg = f"sensor.device_class '{self.device_class}' is not one of {SENSOR_DEVICE_CLASSES}"
+            msg = f"sensor.device_class '{self.device_class}' is not one of {allowed_sensor_device_classes}"
             if strict:
                 raise ValueError(msg)
             logger.warning(msg)
         if (
             self.component == "binary_sensor"
             and self.device_class
-            and self.device_class not in BINARY_SENSOR_DEVICE_CLASSES
+            and self.device_class not in allowed_binary_sensor_device_classes
         ):
-            msg = f"binary_sensor.device_class '{self.device_class}' is not one of {BINARY_SENSOR_DEVICE_CLASSES}"
+            msg = f"binary_sensor.device_class '{self.device_class}' is not one of {allowed_binary_sensor_device_classes}"
             if strict:
                 raise ValueError(msg)
             logger.warning(msg)
