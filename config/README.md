@@ -4,7 +4,7 @@ This directory contains configuration templates for the MQTT Publisher package.
 
 Note
 - The library's configuration loader (`MQTTConfig.from_dict`) only parses the `mqtt.*` section.
-- Any `ha_discovery.*` keys in YAML are not consumed by the library. Home Assistant discovery is configured programmatically via the `mqtt_publisher.ha_discovery` APIs (e.g., `HADiscoveryPublisher`, `Device`, `Entity`).
+- Any `ha_discovery.*` keys in YAML are not consumed by the library. Home Assistant discovery is configured programmatically via the `mqtt_publisher.ha_discovery` APIs (e.g., `Device`, `Entity`, `publish_discovery_configs`).
 - The HA discovery templates here are for reference/examples or for your own higher-level app configuration; they are not read by the core library at runtime.
 
 ## Files Overview
@@ -48,7 +48,7 @@ Note
    ```python
    from mqtt_publisher.config import Config
    from mqtt_publisher.ha_discovery import Device, create_sensor, publish_discovery_configs
-   from mqtt_publisher.publisher import MQTTPublisher
+   from mqtt_publisher import MQTTConfig, MQTTPublisher
 
    config = Config("config/config.yaml")
 
@@ -66,18 +66,9 @@ Note
    )
 
    # Connect and publish discovery
-   mqtt_cfg = {
-      "broker_url": config.get("mqtt.broker_url"),
-      "broker_port": config.get("mqtt.broker_port", 8883),
-      "client_id": config.get("mqtt.client_id", "mqtt_publisher_example"),
-      "security": config.get("mqtt.security", "username"),
-      "auth": {
-         "username": config.get("mqtt.auth.username"),
-         "password": config.get("mqtt.auth.password"),
-      },
-   }
+   mqtt_cfg = MQTTConfig.from_dict({"mqtt": config.get("mqtt")})
 
-   with MQTTPublisher(**mqtt_cfg) as pub:
+   with MQTTPublisher(config=mqtt_cfg) as pub:
       publish_discovery_configs(config, pub, [temp], device)
       # Publish a sample reading
       pub.publish(temp.state_topic, "{\"value\": 22.3}")

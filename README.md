@@ -1,7 +1,7 @@
 # MQTT Publisher
 
 [![PyPI version](https://badge.fury.io/py/ronschaeffer-mqtt-publisher.svg)](https://badge.fury.io/py/ronschaeffer-mqtt-publisher)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![CI](https://github.com/ronschaeffer/mqtt_publisher/workflows/CI/badge.svg)](https://github.com/ronschaeffer/mqtt_publisher/actions)
@@ -35,11 +35,11 @@ MQTT publishing library with MQTT 5.0 support and Home Assistant MQTT Discovery 
 
 ### Home Assistant Integration
 
-- MQTT Discovery framework for automatic entity creation
-- Device and entity management with lifecycle support
-- 18+ Home Assistant entity types supported
-- Status sensor publishing for application health monitoring
-- One-time discovery publishing to prevent configuration flooding
+- MQTT Discovery helpers for automatic entity creation
+- Device and entity classes with lifecycle support
+- 18+ Home Assistant entity types available
+- Status sensor for application health monitoring
+- One-time discovery publishing to limit repeated config messages
 
 ### Connection Management
 
@@ -137,23 +137,16 @@ mqtt:
       "sensors/*": "DEBUG"
       "status": "INFO"
 
-# Home Assistant Discovery (optional)
-ha_discovery:
-  discovery_prefix: "${HA_DISCOVERY_PREFIX}"
-  device:
-    name: "My MQTT Device"
-    identifier: "mqtt_device_001"
-    manufacturer: "Custom"
-    model: "MQTT Publisher"
-    sw_version: "1.0.0"
+"""
+
+Note
+- The library parses only the `mqtt.*` section. Any `ha_discovery.*` keys are for your application and are not consumed by the core library. Configure HA discovery in code via `mqtt_publisher.ha_discovery`.
 ```
 
-For more templates (including Home Assistant Discovery focused examples), see `config/README.md`:
+Templates available in `config/`:
 
 - `config.yaml.example` — basic MQTT configuration
-- `config_ha_discovery.yaml.example` — MQTT + Home Assistant Discovery
-- `ha_mqtt_discovery.yaml.example` — HA discovery components (YAML)
-- `ha_mqtt_discovery.json.example` — HA discovery components (JSON)
+- `config_ha_discovery.yaml.example` — application-level example with HA discovery context
 
 ### Security Modes
 
@@ -197,12 +190,16 @@ if publisher.connect():
 
 ```python
 from mqtt_publisher import MQTTConfig, MQTTPublisher
+import yaml
 
-# Load from YAML configuration
-config = MQTTConfig.from_yaml_file("config/config.yaml")
+# Load from YAML file into a dict, then build an MQTT config
+with open("config/config.yaml") as f:
+    raw = yaml.safe_load(f)
+
+mqtt_config = MQTTConfig.from_dict(raw)
 
 # Context manager ensures proper cleanup
-with MQTTPublisher(config=config) as publisher:
+with MQTTPublisher(config=mqtt_config) as publisher:
     # Publisher automatically connects and disconnects
     publisher.publish("sensors/temperature", {"value": 23.5, "unit": "°C"})
 ```
@@ -210,37 +207,36 @@ with MQTTPublisher(config=config) as publisher:
 ### Home Assistant Discovery
 
 ```python
-from mqtt_publisher.ha_discovery import HADiscoveryPublisher, Device, Entity
+from mqtt_publisher.config import Config
+from mqtt_publisher.ha_discovery import Device, create_sensor, publish_discovery_configs
+from mqtt_publisher import MQTTPublisher, MQTTConfig
+import json
 
-# Initialize discovery publisher
-discovery = HADiscoveryPublisher(
-    publisher=publisher,
-    discovery_prefix="homeassistant"
-)
+# App config (YAML with mqtt.* section)
+cfg = Config("config/config.yaml")
 
-# Create device
-device = Device(
-    name="Weather Station",
-    identifier="weather_001",
-    manufacturer="Custom",
-    model="ESP32"
-)
+# Build MQTT client config
+mqtt_cfg = MQTTConfig.from_dict({"mqtt": cfg.get("mqtt")})
 
-# Create sensor entity
-temperature_sensor = Entity(
-    entity_type="sensor",
-    object_id="temperature",
+device = Device(cfg, name="Weather Station", manufacturer="Custom", model="ESP32")
+
+temp = create_sensor(
+    config=cfg,
+    device=device,
     name="Temperature",
+    unique_id="weather_temp",
+    state_topic="weather/temperature",
     device_class="temperature",
     unit_of_measurement="°C",
-    state_topic="weather/temperature"
+    value_template="{{ value_json.value }}",
 )
 
-# Publish discovery configuration
-discovery.publish_entity_config(device, temperature_sensor)
+with MQTTPublisher(config=mqtt_cfg) as pub:
+    # Publish discovery payloads (retain) so HA auto-creates entities
+    publish_discovery_configs(cfg, pub, [temp], device)
 
-# Publish sensor data
-publisher.publish("weather/temperature", "23.5")
+    # Publish a reading
+    pub.publish("weather/temperature", json.dumps({"value": 23.7}))
 ```
 
 ### Error Handling
@@ -271,7 +267,7 @@ except ValueError as e:
 ## Examples
 
 - Explore runnable snippets in `examples/`.
-- Home Assistant MQTT Discovery: see `docs/README.md` and `config/README.md` for guidance and templates.
+- Home Assistant MQTT Discovery: see the example scripts and the section above for code-based setup.
 
 ## Home Assistant constants and type hints
 
@@ -283,7 +279,7 @@ To help you stay compatible with Home Assistant without importing its internals,
 - Binary sensor device classes: `BINARY_SENSOR_DEVICE_CLASSES`, `BinarySensorDeviceClass`
 - Sensor device classes: `SENSOR_DEVICE_CLASSES`, `SensorDeviceClass`
 
-Literals explained (like you’re in high school):
+Literals explained (in simple terms):
 - A Literal says “this value must be one of these exact strings.”
 - Your editor can autocomplete and warn if you type the wrong one.
 - At runtime, this library still uses plain strings for HA payloads.
@@ -297,7 +293,7 @@ home_assistant:
     strict_validation: false
 ```
 
-Supported components (ready to use classes):
+Supported components (entity classes):
 - sensor, binary_sensor, switch, light, cover, climate, fan, lock, number, select, text, button, device_tracker, alarm_control_panel, camera, vacuum, scene, siren
 
 Extensibility (add allowed values without code changes):
@@ -441,6 +437,6 @@ See [GitHub Issues](https://github.com/ronschaeffer/mqtt_publisher/issues) for b
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/ronschaeffer/mqtt_publisher/issues)
-- **Documentation**: [Examples Directory](examples/)
-- **Source Code**: [GitHub Repository](https://github.com/ronschaeffer/mqtt_publisher)
+- Issues: https://github.com/ronschaeffer/mqtt_publisher/issues
+- Examples: examples/
+- Source: https://github.com/ronschaeffer/mqtt_publisher

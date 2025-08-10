@@ -14,6 +14,7 @@ Run this after configuring your MQTT broker settings in config/config.yaml
 import json
 import time
 
+from mqtt_publisher import MQTTConfig, MQTTPublisher
 from mqtt_publisher.config import Config
 from mqtt_publisher.ha_discovery import (
     BinarySensor,
@@ -23,7 +24,6 @@ from mqtt_publisher.ha_discovery import (
     Switch,
     publish_discovery_configs,
 )
-from mqtt_publisher.publisher import MQTTPublisher
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
         name="Smart Room Controller",
         manufacturer="Example Corp",
         model="Room-1000",
-        sw_version="0.2.1-53dadbf-dirty",  # Now supported!
+        sw_version="0.2.1-599e72b-dirty",  # Now supported!
         configuration_url="http://192.168.1.50:8080",  # Now supported!
     )
 
@@ -49,16 +49,9 @@ def main():
     print(f"  Software Version: {device.sw_version}")
     print(f"  Configuration URL: {device.configuration_url}")
 
-    # Create MQTT publisher
-    mqtt_config = {
-        "broker": config.get("mqtt.broker_url", "localhost"),
-        "port": config.get("mqtt.broker_port", 1883),
-        "client_id": config.get("mqtt.client_id", "mqtt_publisher"),
-        "username": config.get("mqtt.auth.username"),
-        "password": config.get("mqtt.auth.password"),
-    }
-
-    publisher = MQTTPublisher(**mqtt_config)
+    # Create MQTT publisher from YAML config
+    mqtt_config = MQTTConfig.from_dict({"mqtt": config.get("mqtt")})
+    publisher = MQTTPublisher(config=mqtt_config)
 
     try:
         publisher.connect()
