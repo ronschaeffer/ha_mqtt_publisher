@@ -9,6 +9,7 @@ to MQTT brokers for Home Assistant auto-discovery.
 
 import json
 
+from .constants import AvailabilityMode, EntityCategory, SensorStateClass
 from .device import Device
 from .entity import Sensor
 from .status_sensor import StatusSensor
@@ -178,7 +179,18 @@ def force_republish_discovery(config, publisher, entities=None, device=None):
     publish_discovery_configs(config, publisher, entities, device, one_time_mode=False)
 
 
-def create_sensor(config, device, name, unique_id, state_topic, **kwargs):
+def create_sensor(
+    config,
+    device: Device,
+    name: str,
+    unique_id: str,
+    state_topic: str,
+    *,
+    entity_category: EntityCategory | None = None,
+    availability_mode: AvailabilityMode | None = None,
+    state_class: SensorStateClass | None = None,
+    **kwargs,
+):
     """
     Convenience function to create a Sensor entity.
 
@@ -199,6 +211,9 @@ def create_sensor(config, device, name, unique_id, state_topic, **kwargs):
         name=name,
         unique_id=unique_id,
         state_topic=state_topic,
+        entity_category=entity_category,
+        availability_mode=availability_mode,
+        state_class=state_class,
         **kwargs,
     )
 

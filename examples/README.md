@@ -85,12 +85,10 @@ After running this example, check your Home Assistant installation for:
 
 ## Configuration Templates
 
-The `config/` directory contains several configuration templates:
+The `config/` directory contains configuration templates:
 
 - `config.yaml.example` - Basic MQTT configuration
-- `config_ha_discovery.yaml.example` - Enhanced config with HA discovery
-- `ha_mqtt_discovery.yaml.example` - HA discovery component templates
-- `ha_mqtt_discovery.json.example` - HA discovery JSON templates
+- `config_ha_discovery.yaml.example` - App-level example including HA discovery context (library reads only `mqtt.*`)
 
 ## Troubleshooting
 

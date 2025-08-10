@@ -1,16 +1,13 @@
-# Version Management Automation
+# Version Management & Releases
 
 This project supports multiple levels of version automation, from manual to fully automated.
 
 ## Automation Levels
 
-### 1. Manual Versioning (Current)
+### 1. Manual Versioning (not recommended)
 
 ```bash
-# Edit pyproject.toml manually
-poetry version patch
-python scripts/sync_versions.py
-git commit -am "chore: bump version"
+# Prefer using the release script below; manual edits risk drift.
 ```
 
 ### 2. Semi-Automated (Recommended)

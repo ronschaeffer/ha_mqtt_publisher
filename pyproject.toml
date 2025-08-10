@@ -1,6 +1,6 @@
 [project]
 name = "ronschaeffer-mqtt-publisher"
-version = "0.2.0"
+version = "0.2.1"
 description = "An MQTT publisher package"
 readme = "README.md"
 license = { text = "MIT" }

@@ -20,6 +20,7 @@ import json
 from pathlib import Path
 import time
 
+from mqtt_publisher import MQTTConfig, MQTTPublisher
 from mqtt_publisher.config import Config
 from mqtt_publisher.ha_discovery import (
     Device,
@@ -27,7 +28,6 @@ from mqtt_publisher.ha_discovery import (
     create_sensor,
     publish_discovery_configs,
 )
-from mqtt_publisher.publisher import MQTTPublisher
 
 
 def load_environment():
@@ -73,11 +73,12 @@ def main():
 
     # Create device representing your application
     device_config = Device(
+        config,
         identifiers=["weather_station_01"],
         name="Weather Station",
         model="WS-1000",
         manufacturer="Example Corp",
-        sw_version="0.2.0-c3c3476-dirty",
+        sw_version="0.2.1-599e72b-dirty",
         configuration_url="http://weather-station.local/config",
     )
     device = device_config  # For backward compatibility with examples below
@@ -87,6 +88,7 @@ def main():
 
     # 1. Temperature sensor with value template
     temp_sensor = create_sensor(
+        config=config,
         device=device,
         name="Temperature",
         unique_id="temp_example_001",
@@ -99,6 +101,7 @@ def main():
 
     # 2. Humidity sensor
     humidity_sensor = create_sensor(
+        config=config,
         device=device,
         name="Humidity",
         unique_id="humidity_example_001",
@@ -110,12 +113,11 @@ def main():
     )
 
     # 3. Status sensor for system health monitoring
-    status_sensor = StatusSensor(
-        device=device, name="System Status", unique_id="status_example_001"
-    )
+    status_sensor = StatusSensor(config, device)
 
     # 4. Counter sensor to demonstrate numerical data
     counter_sensor = create_sensor(
+        config=config,
         device=device,
         name="Message Count",
         unique_id="counter_example_001",
@@ -125,23 +127,7 @@ def main():
     )
 
     # Prepare MQTT configuration
-    mqtt_config = {
-        "broker_url": config.get("mqtt.broker_url"),
-        "broker_port": config.get("mqtt.broker_port", 8883),
-        "client_id": config.get("mqtt.client_id", "mqtt_publisher_example"),
-        "security": config.get("mqtt.security", "username"),
-        "auth": {
-            "username": config.get("mqtt.auth.username"),
-            "password": config.get("mqtt.auth.password"),
-        },
-        "last_will": {
-            "topic": "mqtt_publisher/status",
-            "payload": "offline",
-            "qos": 1,
-            "retain": True,
-        },
-        "max_retries": 3,
-    }
+    mqtt_config = MQTTConfig.from_dict({"mqtt": config.get("mqtt")})
 
     print(
         f"🔗 Connecting to MQTT broker: {mqtt_config['broker_url']}:{mqtt_config['broker_port']}"
@@ -149,17 +135,21 @@ def main():
 
     try:
         # Connect to MQTT and publish discovery configurations
-        with MQTTPublisher(**mqtt_config) as publisher:
+        with MQTTPublisher(config=mqtt_config) as publisher:
             print("✅ Connected to MQTT broker")
 
             # Publish Home Assistant discovery configurations
             entities = [temp_sensor, humidity_sensor, status_sensor, counter_sensor]
-            publish_discovery_configs(publisher, entities)
+            publish_discovery_configs(config, publisher, entities, device)
             print(f"📡 Published discovery configurations for {len(entities)} entities")
 
             # Publish online status
-            status_sensor.publish_online(publisher)
-            print("🟢 Published online status")
+            publisher.publish(
+                "mqtt_publisher/status",
+                json.dumps({"status": "ok"}),
+                retain=True,
+            )
+            print("🟢 Published status")
 
             # Simulate publishing sensor data over time
             counter = 0

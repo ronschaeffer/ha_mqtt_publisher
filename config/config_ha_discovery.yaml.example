@@ -1,40 +1,47 @@
 # Enhanced configuration for mqtt_publisher with Home Assistant Discovery
-# Copy this to config/config.yaml and modify for your environment
+# Copy this to config/config.yaml and modify for your environment.
 
-# Application identity (used in Home Assistant device registration)
+# Note:
+# - The library only parses the `mqtt.*` section. Home Assistant discovery
+#   is configured in code using mqtt_publisher.ha_discovery classes.
+# - These topics align with the example scripts under examples/.
+
+# Application identity (used in device registration via HA discovery payloads)
 app:
   name: "MQTT Publisher Example"
-  unique_id_prefix: "mqtt_pub_example"
+  unique_id_prefix: "mqtt_publisher"
   manufacturer: "Generic MQTT Publisher"
-  model: "MQTT-Pub-Py-v2"
+  model: "MQTT-Pub-Py"
 
 # MQTT Configuration
 mqtt:
-  broker_url: "${MQTT_BROKER_URL}" # Environment variable
+  broker_url: "${MQTT_BROKER_URL}"
   broker_port: 8883
-  client_id: "${MQTT_CLIENT_ID}" # Environment variable
+  client_id: "${MQTT_CLIENT_ID}"
   base_topic: "mqtt_publisher"
-  security: "username" # Options: none, username, tls, tls_with_client_cert
+  security: "username"  # Options: none, username, tls, tls_with_client_cert
   auth:
-    username: "${MQTT_USERNAME}" # Environment variable
-    password: "${MQTT_PASSWORD}" # Environment variable
+    username: "${MQTT_USERNAME}"
+    password: "${MQTT_PASSWORD}"
   tls:
-    ca_cert: null # Path to CA certificate
-    client_cert: null # Path to client certificate
-    client_key: null # Path to client key
-    verify: false # Set to true in production
+    ca_cert: null
+    client_cert: null
+    client_key: null
+    verify: false  # Set to true with real certs
   topics:
     status: "mqtt_publisher/status"
+    # Example sensor topics used by examples
     temperature: "mqtt_publisher/sensors/temperature"
     humidity: "mqtt_publisher/sensors/humidity"
-    data: "mqtt_publisher/sensors/data"
+    counter: "mqtt_publisher/sensors/counter"
 
-# Home Assistant Integration
+# Home Assistant Discovery (read at runtime by example code, not the library)
 home_assistant:
   enabled: true
   discovery_prefix: "homeassistant"
+  discovery_state_file: ".ha_discovery_state.json"
 
-# Last Will and Testament
+# Last Will and Testament (consumed by mqtt_publisher.MQTTPublisher)
 last_will:
   topic: "mqtt_publisher/status"
   payload: "offline"
