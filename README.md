@@ -184,6 +184,17 @@ publisher.publish("home/room/temperature", "23.4", qos=1, retain=True)
 - Device-centric (optional): Publish one device config to <prefix>/device/<device_id>/config, then publish entities as needed.
 	- Optionally, publish a single bundled message that includes all entities. You can also request the bundle be emitted before per-entity topics via emit_device_bundle=True in publish_discovery_configs.
 
+#### Which mode should I use?
+
+- Use entity-centric when you need maximum backward compatibility with all HA versions or want explicit per-entity config topics.
+- Use device bundle when your HA supports the bundled device config for faster provisioning, single-topic idempotency, and cleaner device metadata. You can still publish per-entity topics alongside the bundle by default.
+
+Key differences
+- Topic shape: entity-centric uses component topics per entity; bundle uses one device topic plus runtime state topics.
+- Device block: per-entity configs repeat device metadata; bundle has a single dev block.
+- Keys inside bundle: entities are keyed by unique_id; entity-centric uses object_id in topic paths.
+- Transport defaults: bundle may include qos/retain as top-level hints; per-entity uses transport options only.
+
 Device-centric publish example
 
 ```python
@@ -261,6 +272,22 @@ Notes
 ```bash
 pytest -q
 ```
+
+Entity-centric verification snippet
+
+```python
+from ha_mqtt_publisher.ha_discovery import ensure_discovery
+
+# Verify per-entity discovery topics; republish any missing
+ensure_discovery(
+	config=app_config,
+	publisher=publisher,
+	entities=[temp, humid, status],
+	device=device,
+	one_time_mode=True,
+)
+```
+See also: examples/entity_verification.py
 
 Emit device bundle within publish_discovery_configs
 
