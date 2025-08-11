@@ -163,6 +163,24 @@ ok = publish_device_config(
 )
 ```
 
+Bundled device-centric publish (single message)
+
+```python
+from ha_mqtt_publisher.ha_discovery import Device, Sensor, publish_device_bundle
+
+device = Device(app_config)
+temp = Sensor(app_config, device, name="Temperature", unique_id="temp", state_topic="room/t")
+humid = Sensor(app_config, device, name="Humidity", unique_id="humid", state_topic="room/h")
+
+# Publishes one config message containing device (dev) and components (cmps)
+publish_device_bundle(
+	config=app_config,
+	publisher=publisher,
+	device=device,
+	entities=[temp, humid],
+)
+```
+
 ### One-time publication
 
 - Enabled by passing one_time_mode=True to publish_discovery_configs.

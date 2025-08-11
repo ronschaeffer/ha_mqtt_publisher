@@ -11,7 +11,7 @@ import json
 
 from .constants import AvailabilityMode, EntityCategory, SensorStateClass
 from .device import Device
-from .entity import Sensor
+from .entity import Entity, Sensor
 from .status_sensor import StatusSensor
 
 
@@ -226,6 +226,92 @@ def publish_device_config(
     topic = f"{discovery_prefix}/device/{device_id}/config"
     payload = device.get_device_info()
     return publisher.publish(topic=topic, payload=json.dumps(payload), retain=retain)
+
+
+def _entity_to_component_payload(entity: Entity) -> dict:
+    """Convert an Entity instance to a compact component payload for cmps."""
+    payload = entity.get_config_payload().copy()
+
+    # Map to compact keys where applicable (aligning with HA docs example terms):
+    # - platform -> p (component type)
+    # - unique_id kept as unique_id
+    # Remove top-level device block; device is represented once in bundle
+    payload.pop("device", None)
+
+    # Ensure component type key (p)
+    payload["p"] = entity.component
+    return payload
+
+
+def publish_device_bundle(
+    config,
+    publisher,
+    device: Device,
+    entities: list[Entity],
+    *,
+    device_id: str | None = None,
+    retain: bool = True,
+) -> bool:
+    """
+    Publish a single device-centric bundled discovery message including all entities.
+
+    Topic: <discovery_prefix>/device/<device_id>/config
+
+    Payload structure:
+    {
+      "dev": { ...device info... },
+      "o":   { ...origin info... },
+      "cmps": { <object_id>: { ...component payload... }, ... },
+      "qos": <int>,
+      "retain": <bool>,
+      "state_topic": <optional default>
+    }
+    Note: Entities still publish state/command at runtime; this replaces per-entity
+    config publishes on modern HA versions that support the device bundle.
+    """
+    discovery_prefix = config.get("home_assistant.discovery_prefix", "homeassistant")
+
+    # Determine device_id for topic
+    if not device_id:
+        if isinstance(device.identifiers, list) and device.identifiers:
+            device_id = str(device.identifiers[0])
+        else:
+            device_id = _slugify(device.name)
+
+    topic = f"{discovery_prefix}/device/{device_id}/config"
+
+    # Build cmps from entities keyed by their unique_id or object_id
+    cmps: dict[str, dict] = {}
+    for e in entities:
+        comp_payload = _entity_to_component_payload(e)
+        # Use the raw entity.unique_id as bundle key to keep keys stable and readable
+        key = e.unique_id
+        cmps[key] = comp_payload
+
+    # Origin block (optional)
+    origin = {
+        "name": config.get("app.name", "ha_mqtt_publisher"),
+        "sw": config.get("app.sw_version"),
+        "url": config.get("app.configuration_url"),
+    }
+    origin = {k: v for k, v in origin.items() if v}
+
+    bundle = {
+        "dev": device.get_device_info(),
+        "cmps": cmps,
+    }
+    if origin:
+        bundle["o"] = origin
+
+    # Optional defaults at bundle level
+    default_qos = config.get("mqtt.default_qos")
+    if default_qos is not None:
+        bundle["qos"] = int(default_qos)
+    default_retain = config.get("mqtt.default_retain")
+    if default_retain is not None:
+        bundle["retain"] = bool(default_retain)
+
+    return publisher.publish(topic=topic, payload=json.dumps(bundle), retain=retain)
 
 
 def create_sensor(

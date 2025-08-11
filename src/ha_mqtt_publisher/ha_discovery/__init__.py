@@ -28,6 +28,7 @@ from .entity import (
 from .publisher import (
     create_sensor,
     create_status_sensor,
+    publish_device_bundle,
     publish_device_config,
     publish_discovery_configs,
 )
@@ -55,6 +56,7 @@ __all__ = [
     "Text",
     "create_sensor",
     "create_status_sensor",
+    "publish_device_bundle",
     "publish_device_config",
     "publish_discovery_configs",
 ]
