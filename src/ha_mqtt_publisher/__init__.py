@@ -1,6 +1,6 @@
 """An MQTT publisher package with Home Assistant Discovery support"""
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __author__ = "ronschaeffer"
 
 # Import main components for easy access
