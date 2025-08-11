@@ -226,6 +226,32 @@ Notes
 pytest -q
 ```
 
+### Discovery verification (optional self-heal)
+
+If you want the library to verify retained discovery topics exist on the broker and republish any that are missing, enable the verification pass when using one-time mode.
+
+- Config flags:
+  - home_assistant.ensure_discovery_on_startup: true|false (default false)
+  - home_assistant.ensure_discovery_timeout: float seconds (default 2.0)
+  - home_assistant.bundle_only_mode: true|false (default false). When true, verification checks only the device bundle topic and republishes it if missing.
+
+Lightweight example
+
+```python
+from ha_mqtt_publisher.ha_discovery import ensure_discovery
+
+# Before publish_discovery_configs (optional; publish_discovery_configs will call this automatically
+# when one_time_mode=True and home_assistant.ensure_discovery_on_startup is true)
+ensure_discovery(
+	config=app_config,
+	publisher=publisher,
+	entities=[temp, status],
+	device=device,
+	timeout=app_config.get("home_assistant.ensure_discovery_timeout", 2.0),
+	one_time_mode=True,
+)
+```
+
 ## Development
 
 - Install dev dependencies: pip install -e .[dev]

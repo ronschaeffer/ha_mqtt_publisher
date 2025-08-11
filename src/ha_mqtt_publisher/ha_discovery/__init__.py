@@ -26,16 +26,21 @@ from .entity import (
     Text,
 )
 from .publisher import (
+    AvailabilityMode,
+    EntityCategory,
+    SensorStateClass,
+    StatusSensor,
     create_sensor,
     create_status_sensor,
+    ensure_discovery,
     publish_device_bundle,
     publish_device_config,
     publish_discovery_configs,
 )
-from .status_sensor import StatusSensor
 
 __all__ = [
     "AlarmControlPanel",
+    "AvailabilityMode",
     "BinarySensor",
     "Button",
     "Camera",
@@ -45,17 +50,20 @@ __all__ = [
     "DeviceTracker",
     "DiscoveryManager",
     "Entity",
+    "EntityCategory",
     "Fan",
     "Light",
     "Lock",
     "Number",
     "Select",
     "Sensor",
+    "SensorStateClass",
     "StatusSensor",
     "Switch",
     "Text",
     "create_sensor",
     "create_status_sensor",
+    "ensure_discovery",
     "publish_device_bundle",
     "publish_device_config",
     "publish_discovery_configs",

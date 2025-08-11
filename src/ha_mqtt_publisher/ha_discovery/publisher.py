@@ -8,6 +8,7 @@ to MQTT brokers for Home Assistant auto-discovery.
 """
 
 import json
+import time
 
 from .constants import AvailabilityMode, EntityCategory, SensorStateClass
 from .device import Device
@@ -61,8 +62,32 @@ def publish_discovery_configs(
         if config.get("mqtt.topics.status"):
             entities.append(StatusSensor(config, device))
 
-    # Optionally emit device bundle first (does not use one_time_mode tracking yet)
-    if emit_device_bundle and entities:
+    # Optionally run a verification pass to heal missing retained configs
+    # Only when explicitly enabled and when publisher supports subscriptions.
+    ensure_enabled = config.get("home_assistant.ensure_discovery_on_startup", False)
+    if (
+        ensure_enabled
+        and one_time_mode
+        and hasattr(publisher, "subscribe")
+        and callable(publisher.subscribe)
+        and entities
+    ):
+        try:
+            ensure_discovery(
+                config=config,
+                publisher=publisher,
+                entities=entities,
+                device=device,
+                device_id=device_id,
+                timeout=float(
+                    config.get("home_assistant.ensure_discovery_timeout", 2.0)
+                ),
+                one_time_mode=True,
+            )
+        except Exception as e:
+            print(f"Warning: ensure_discovery failed: {e}")
+    elif emit_device_bundle and entities:
+        # If ensure_discovery isn't used, optionally emit device bundle first
         try:
             publish_device_bundle(
                 config=config,
@@ -208,6 +233,126 @@ def force_republish_discovery(config, publisher, entities=None, device=None):
     """
     clear_discovery_state(config)
     publish_discovery_configs(config, publisher, entities, device, one_time_mode=False)
+
+
+def ensure_discovery(
+    config,
+    publisher,
+    entities: list[Entity] | None = None,
+    device: Device | None = None,
+    *,
+    device_id: str | None = None,
+    timeout: float = 2.0,
+    one_time_mode: bool = False,
+):
+    """
+    Verify retained discovery configs exist; republish any missing.
+
+    - Subscribes to relevant discovery topics (bundle + per-entity).
+    - Waits up to `timeout` for retained messages to arrive.
+    - Republishes missing topics and optionally marks them "published" when one_time_mode.
+
+    Returns a summary dict: {"seen": set[str], "missing": set[str], "republished": set[str]}.
+    """
+    discovery_prefix = config.get("home_assistant.discovery_prefix", "homeassistant")
+
+    topics_to_check: list[str] = []
+
+    # Bundle topic (if device provided and bundle-only mode enabled)
+    bundle_only_mode = bool(config.get("home_assistant.bundle_only_mode", False))
+    bundle_topic: str | None = None
+    if device is not None:
+        if not device_id:
+            if isinstance(device.identifiers, list) and device.identifiers:
+                device_id = str(device.identifiers[0])
+            else:
+                device_id = _slugify(device.name)
+        bundle_topic = f"{discovery_prefix}/device/{device_id}/config"
+        # Always consider bundle if bundle_only_mode; otherwise we still check per-entity
+        if bundle_only_mode:
+            topics_to_check.append(bundle_topic)
+
+    # Entity topics
+    entities = entities or []
+    if entities and not bundle_only_mode:
+        topics_to_check.extend([e.get_config_topic() for e in entities])
+
+    if not topics_to_check:
+        return {"seen": set(), "missing": set(), "republished": set()}
+
+    seen: set[str] = set()
+    republished: set[str] = set()
+
+    # Callback to record seen topics
+    def _on_msg(_client, _userdata, msg):  # pragma: no cover - tiny glue
+        try:
+            seen.add(msg.topic)
+        except Exception:
+            pass
+
+    # Subscribe to each topic; messages should arrive immediately if retained
+    for t in topics_to_check:
+        try:
+            publisher.subscribe(t, qos=0, callback=_on_msg)
+        except Exception:
+            # Non-fatal; continue to try others
+            pass
+
+    # Wait briefly or until all are seen
+    deadline = time.time() + max(0.05, float(timeout))
+    while time.time() < deadline and len(seen) < len(topics_to_check):
+        time.sleep(0.05)
+
+    # Unsubscribe
+    for t in topics_to_check:
+        try:
+            if hasattr(publisher, "unsubscribe"):
+                publisher.unsubscribe(t)
+        except Exception:
+            pass
+
+    missing = set(topics_to_check) - seen
+
+    # Republish bundle if needed
+    if bundle_only_mode and bundle_topic and (bundle_topic in missing) and device:
+        try:
+            ok = publish_device_bundle(
+                config=config,
+                publisher=publisher,
+                device=device,
+                entities=entities,
+                device_id=device_id,
+            )
+            if ok:
+                republished.add(bundle_topic)
+                if one_time_mode:
+                    _mark_discovery_as_published(bundle_topic, config)
+        except Exception as e:
+            print(f"Warning: failed to republish bundle discovery: {e}")
+
+    # Republish missing per-entity topics
+    if entities and not bundle_only_mode:
+        for e in entities:
+            t = e.get_config_topic()
+            if t in missing:
+                try:
+                    payload = e.get_config_payload()
+                    publisher.publish(topic=t, payload=json.dumps(payload), retain=True)
+                    republished.add(t)
+                    if one_time_mode:
+                        _mark_discovery_as_published(t, config)
+                except Exception as e:
+                    print(f"Warning: failed to republish discovery for {t}: {e}")
+
+    # Optionally mark seen topics as published in one-time mode
+    if one_time_mode:
+        for t in seen:
+            try:
+                _mark_discovery_as_published(t, config)
+            except Exception:
+                pass
+
+    return {"seen": seen, "missing": missing, "republished": republished}
 
 
 def publish_device_config(
