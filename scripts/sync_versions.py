@@ -180,7 +180,7 @@ class VersionSync:
             # Skip binary files
             return False
 
-        # Pattern to match sw_version: "0.2.1-6c2dda7-dirty" or sw_version="x.y.z"
+        # Pattern to match sw_version: "0.2.2-b4137c6-dirty" or sw_version="x.y.z"
         sw_version_patterns = [
             r'(\s*sw_version:\s*)["\'][^"\']*["\']',  # YAML format
             r'(sw_version\s*=\s*)["\'][^"\']*["\']',  # Python format
