@@ -15,8 +15,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ronschaeffer/mqtt_publisher"
-Repository = "https://github.com/ronschaeffer/mqtt_publisher"
+Homepage = "https://github.com/ronschaeffer/ha_mqtt_publisher"
+Repository = "https://github.com/ronschaeffer/ha_mqtt_publisher"
 
 [project.optional-dependencies]
 dev = [

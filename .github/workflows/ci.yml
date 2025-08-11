@@ -40,18 +40,43 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-3.11-poetry-2.1.4-${{ hashFiles('poetry.lock') }}
+          key: venv-b3-${{ runner.os }}-3.11-poetry-2.1.4-extras-dev-${{ hashFiles('poetry.lock') }}
           restore-keys: |
-            venv-${{ runner.os }}-3.11-
+            venv-b3-${{ runner.os }}-3.11-poetry-2.1.4-extras-dev-
+            venv-b3-${{ runner.os }}-3.11-
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --extras dev --no-interaction --no-ansi
+        run: poetry install --all-extras --no-root --no-interaction --no-ansi
+
+      - name: Ensure test dependencies present
+        run: |
+          poetry run python -m pip install --upgrade pip
+          poetry run python -m pip install pytest pytest-cov pytest-mock
+
+      - name: Verify test tooling
+        run: |
+          echo "🔎 Verifying pytest availability..."
+          if ! poetry run python -c "import pytest" >/dev/null 2>&1; then
+            echo "⚠️  Missing pytest detected; installing dev extras..."
+            poetry install --extras dev --no-root --no-interaction --no-ansi
+            poetry run python -c "import pytest; print('pytest import: OK')"
+          fi
+
+      - name: Verify test tooling
+        run: |
+          echo "🔎 Verifying pytest and pre-commit availability..."
+          if ! poetry run python -c "import pytest, pre_commit" >/dev/null 2>&1; then
+            echo "⚠️  Missing test tooling detected; installing dev extras..."
+            poetry install --extras dev --no-root --no-interaction --no-ansi
+            poetry run python -c "import pytest, pre_commit; print('pytest/pre-commit import: OK')"
+          fi
 
       - name: Show tool versions
         run: |
           poetry --version
           poetry run python -V
+          poetry run python -c "import sys; print('venv:', sys.executable)"
+          poetry run python -c "import pytest, pre_commit; print('pytest/pre-commit import: OK')"
 
       - name: Validate Poetry configuration
         run: poetry check
@@ -102,19 +127,25 @@ jobs:
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: .venv
-          key: venv-${{ runner.os }}-${{ matrix.python-version }}-poetry-2.1.4-${{ hashFiles('poetry.lock') }}
+          key: venv-b3-${{ runner.os }}-${{ matrix.python-version }}-poetry-2.1.4-extras-dev-${{ hashFiles('poetry.lock') }}
           restore-keys: |
-            venv-${{ runner.os }}-${{ matrix.python-version }}-
+            venv-b3-${{ runner.os }}-${{ matrix.python-version }}-poetry-2.1.4-extras-dev-
+            venv-b3-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --extras dev --no-interaction --no-ansi
+        run: poetry install --all-extras --no-root --no-interaction --no-ansi
 
       - name: Run tests
         run: |
           echo "🧪 Running test suite..."
           poetry check
-          poetry run pytest --cov --cov-report=xml --cov-report=term-missing
+          # Ensure pytest is available; if not, install it directly as a last resort
+          if ! poetry run python -c "import pytest" >/dev/null 2>&1; then
+            echo "⚠️  pytest still missing; installing via pip inside venv..."
+            poetry run python -m pip install --upgrade pip
+            poetry run python -m pip install pytest
+          fi
+          poetry run python -m pytest --cov --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
