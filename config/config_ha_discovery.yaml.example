@@ -19,7 +19,7 @@ mqtt:
   broker_port: 8883
   client_id: "${MQTT_CLIENT_ID}"
   base_topic: "mqtt_publisher"
-  security: "username"  # Options: none, username, tls, tls_with_client_cert
+  security: "username" # Options: none, username, tls, tls_with_client_cert
   auth:
     username: "${MQTT_USERNAME}"
     password: "${MQTT_PASSWORD}"
@@ -27,7 +27,7 @@ mqtt:
     ca_cert: null
     client_cert: null
     client_key: null
-    verify: false  # Set to true with real certs
+    verify: false # Set to true with real certs
   topics:
     status: "mqtt_publisher/status"
     # Example sensor topics used by examples

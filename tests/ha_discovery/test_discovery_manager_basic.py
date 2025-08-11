@@ -2,9 +2,9 @@
 
 from unittest.mock import Mock
 
-from mqtt_publisher.ha_discovery.device import Device
-from mqtt_publisher.ha_discovery.discovery_manager import DiscoveryManager
-from mqtt_publisher.ha_discovery.entity import Entity
+from ha_mqtt_publisher.ha_discovery.device import Device
+from ha_mqtt_publisher.ha_discovery.discovery_manager import DiscoveryManager
+from ha_mqtt_publisher.ha_discovery.entity import Entity
 
 
 class MockConfig:
@@ -210,7 +210,7 @@ class TestDiscoveryManagerBasic:
         self.publisher.publish.return_value = False
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.error"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.error"
         ) as mock_error:
             # Test adding entity
             result = self.manager.add_entity(entity)
@@ -238,7 +238,7 @@ class TestDiscoveryManagerBasic:
         self.publisher.publish.return_value = True
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.info"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.info"
         ) as mock_info:
             # Test adding entity
             result = self.manager.add_entity(entity)
@@ -254,7 +254,7 @@ class TestDiscoveryManagerBasic:
         from unittest.mock import patch
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.warning"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.warning"
         ) as mock_warning:
             # Test removing non-existent entity
             result = self.manager.remove_entity("non_existent_entity")
@@ -283,7 +283,7 @@ class TestDiscoveryManagerBasic:
         self.publisher.publish.return_value = True
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.info"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.info"
         ) as mock_info:
             # Test removing entity
             result = self.manager.remove_entity("test_entity_remove_log")
@@ -312,7 +312,7 @@ class TestDiscoveryManagerBasic:
         self.publisher.publish.return_value = False
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.error"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.error"
         ) as mock_error:
             # Test removing entity
             result = self.manager.remove_entity("test_entity_remove_fail")
@@ -333,7 +333,7 @@ class TestDiscoveryManagerBasic:
         entity.get_config_topic.side_effect = Exception("Test exception")
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.error"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.error"
         ) as mock_error:
             # Test adding entity
             result = self.manager.add_entity(entity)
@@ -357,7 +357,7 @@ class TestDiscoveryManagerBasic:
         self.manager.entities["test_entity_exception_remove"] = entity
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.error"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.error"
         ) as mock_error:
             # Test removing entity
             result = self.manager.remove_entity("test_entity_exception_remove")
@@ -415,7 +415,7 @@ class TestDiscoveryManagerBasic:
         device.name.__str__ = Mock(side_effect=Exception("Test exception"))
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.error"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.error"
         ) as mock_error:
             # Test adding device
             result = self.manager.add_device(device)
@@ -436,7 +436,7 @@ class TestDiscoveryManagerBasic:
         device.identifiers = ["test_device_success"]
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.info"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.info"
         ) as mock_info:
             # Test adding device
             result = self.manager.add_device(device)
@@ -452,7 +452,7 @@ class TestDiscoveryManagerBasic:
         from unittest.mock import patch
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.warning"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.warning"
         ) as mock_warning:
             # Test removing non-existent device
             result = self.manager.remove_device("non_existent_device")
@@ -479,7 +479,7 @@ class TestDiscoveryManagerBasic:
         self.publisher.publish.return_value = True
 
         with patch(
-            "mqtt_publisher.ha_discovery.discovery_manager.logging.info"
+            "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.info"
         ) as mock_info:
             # Test removing device
             result = self.manager.remove_device("test_device_remove_log")
@@ -503,7 +503,7 @@ class TestDiscoveryManagerBasic:
 
         with (
             patch(
-                "mqtt_publisher.ha_discovery.discovery_manager.logging.error"
+                "ha_mqtt_publisher.ha_discovery.discovery_manager.logging.error"
             ) as mock_error,
             patch.object(self.manager, "entities") as mock_entities,
         ):

@@ -2,7 +2,7 @@
 
 import pytest
 
-from mqtt_publisher.config import MQTTConfig
+from ha_mqtt_publisher.config import MQTTConfig
 
 
 class TestMQTTConfigBuildConfig:

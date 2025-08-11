@@ -2,7 +2,7 @@
 
 import paho.mqtt.client as mqtt
 
-from mqtt_publisher.publisher import MQTTPublisher
+from ha_mqtt_publisher.publisher import MQTTPublisher
 
 
 class TestMQTT5Support:

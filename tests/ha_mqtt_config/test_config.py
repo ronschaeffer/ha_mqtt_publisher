@@ -10,8 +10,8 @@ def test_sys_path():
 def test_import_module():
     try:
         # Use the import in the test
-        import mqtt_publisher
+        import ha_mqtt_publisher as pkg
 
-        assert mqtt_publisher is not None
+        assert pkg is not None
     except ImportError as e:
-        raise AssertionError("Should be able to import mqtt_publisher module") from e
+        raise AssertionError("Should be able to import ha_mqtt_publisher module") from e

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import paho.mqtt.client as mqtt
 
-from mqtt_publisher.publisher import MQTTPublisher
+from ha_mqtt_publisher.publisher import MQTTPublisher
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)

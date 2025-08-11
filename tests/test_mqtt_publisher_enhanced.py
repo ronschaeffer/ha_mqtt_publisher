@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mqtt_publisher import MQTTConfig, MQTTPublisher
+from ha_mqtt_publisher import MQTTConfig, MQTTPublisher
 
 
 class TestMQTTPublisherPortConversion:

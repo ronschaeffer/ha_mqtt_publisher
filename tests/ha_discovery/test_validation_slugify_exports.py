@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from mqtt_publisher.ha_discovery.device import Device
-from mqtt_publisher.ha_discovery.entity import BinarySensor, Sensor
+from ha_mqtt_publisher.ha_discovery.device import Device
+from ha_mqtt_publisher.ha_discovery.entity import BinarySensor, Sensor
 
 
 class MockConfig:
@@ -158,7 +158,7 @@ def test_object_id_slugification_preserves_unique_id():
 
 def test_public_exports_expected_and_not_exposing_internal():
     """Ensure key public classes are exported and internal ones are not."""
-    mod = importlib.import_module("mqtt_publisher.ha_discovery")
+    mod = importlib.import_module("ha_mqtt_publisher.ha_discovery")
     assert isinstance(mod, types.ModuleType)
 
     # Expected exports (a representative subset)
