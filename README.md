@@ -52,11 +52,47 @@ home_assistant:
 	strict_validation: "${HA_STRICT_VALIDATION}"     # true | false (default true)
 	discovery_state_file: "${HA_DISCOVERY_STATE_FILE}"
 	extra_allowed: {}  # optional extension lists (entity categories, etc.)
+
+	# Optional self-heal verification (one-time mode)
+	ensure_discovery_on_startup: "${HA_ENSURE_DISCOVERY_ON_STARTUP}"  # true | false (default false)
+	ensure_discovery_timeout: "${HA_ENSURE_DISCOVERY_TIMEOUT}"        # seconds (default 2.0)
+
+	# Optional device-bundle behavior for modern HA
+	bundle_only_mode: "${HA_BUNDLE_ONLY_MODE}"        # true | false (default false)
+
+app:
+	# Optional metadata used for bundle origin info (o)
+	name: "${APP_NAME}"
+	sw_version: "${APP_SW_VERSION}"
+	configuration_url: "${APP_CONFIGURATION_URL}"
 ```
 
 Notes
 - Use ${VAR} placeholders and set environment variables for your runtime.
 - mqtt.* is used by the MQTTPublisher. home_assistant.* is used by discovery helpers.
+- app.* is optional and only used to populate origin metadata in bundled device configs.
+
+### Quick reference: configuration keys
+
+Home Assistant (home_assistant.*)
+
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| discovery_prefix | string | homeassistant | Base discovery topic prefix |
+| strict_validation | bool | true | Validate entity fields against known enums |
+| discovery_state_file | string | — | JSON file path for one-time mode state |
+| extra_allowed | dict | {} | Extend allowed values (entity categories, etc.) |
+| ensure_discovery_on_startup | bool | false | Verify retained discovery topics and republish missing ones before publishing (one-time mode) |
+| ensure_discovery_timeout | float | 2.0 | Wait time for retained discovery messages |
+| bundle_only_mode | bool | false | For modern HA: verify/publish only the device bundle topic |
+
+Application metadata (app.*) used in bundled device origin block (optional)
+
+| Key | Type | Purpose |
+|-----|------|---------|
+| name | string | App name for origin (o.name) |
+| sw_version | string | App/software version (o.sw) |
+| configuration_url | string | URL to docs/config (o.url) |
 
 ## Usage
 
@@ -226,6 +262,19 @@ Notes
 pytest -q
 ```
 
+Emit device bundle within publish_discovery_configs
+
+```python
+publish_discovery_configs(
+	config=app_config,
+	publisher=publisher,
+	entities=[temp, humid],
+	device=device,
+	one_time_mode=True,
+	emit_device_bundle=True,  # bundle first, then per-entity topics
+)
+```
+
 ### Discovery verification (optional self-heal)
 
 If you want the library to verify retained discovery topics exist on the broker and republish any that are missing, enable the verification pass when using one-time mode.
@@ -251,6 +300,33 @@ ensure_discovery(
 	one_time_mode=True,
 )
 ```
+
+Modern HA: bundle-only verification example
+
+If your Home Assistant version supports device bundle configs and you set:
+
+```yaml
+home_assistant:
+	bundle_only_mode: true
+```
+
+You can verify (and republish if missing) just the bundle topic:
+
+```python
+from ha_mqtt_publisher.ha_discovery import ensure_discovery
+
+# Assumes home_assistant.bundle_only_mode: true in your YAML
+ensure_discovery(
+		config=app_config,
+		publisher=publisher,
+		entities=[temp, humid],  # included in the bundle
+		device=device,
+		device_id="living_room_bridge",  # optional; defaults to first device identifier
+		one_time_mode=True,
+)
+```
+
+See also: examples/bundle_only_verification.py
 
 ## Development
 
