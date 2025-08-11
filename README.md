@@ -147,11 +147,18 @@ publisher.publish("home/room/temperature", "23.4", qos=1, retain=True)
 - Enabled by passing one_time_mode=True to publish_discovery_configs.
 - Tracks published topics in home_assistant.discovery_state_file.
 
-## Supported Home Assistant components and device
+## Supported Home Assistant components
+
+### About "Device" (registry grouping)
+
+- Device is metadata included in each entity's discovery payload; it is not a standalone component or topic.
+- Home Assistant uses it to group entities in the Device Registry and display manufacturer/model, versions, and links.
+- Create one Device per physical/logical device and pass it to all related entities; removal happens when all related entities are removed.
+
+### Components
 
 | Type            | Component key       | Notes |
 |-----------------|---------------------|-------|
-| Device          | device              | Device info shared by entities |
 | Sensor          | sensor              | state_topic required |
 | Binary Sensor   | binary_sensor       | state_topic required; device_class supported |
 | Switch          | switch              | command/state topics supported |
