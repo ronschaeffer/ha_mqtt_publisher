@@ -1,195 +1,202 @@
 HA MQTT Publisher
 
-A Python library for MQTT publishing and subscribing, plus safe, typed Home Assistant (HA) MQTT Discovery helpers. It focuses on clean configuration, strict-but-extensible validation for HA fields, and practical defaults so you can ship stable, HA-friendly topics and entities.
+[![PyPI](https://img.shields.io/pypi/v/ha-mqtt-publisher.svg)](https://pypi.org/project/ha-mqtt-publisher/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-Key capabilities
-- MQTT client usage: username/password, TLS, keepalive, client_id, LWT
-- HA Discovery: device/entity builders, status sensor, one-time discovery publishing, deterministic object_id
-- Strict validation by default with optional extra_allowed extensions
-- YAML- and env-driven configuration
+A Python MQTT publishing library with Home Assistant MQTT Discovery support.
 
-Installation
-- Python 3.9+ is recommended.
-- Install: pip install ha-mqtt-publisher
+## Features
 
-Configuration overview
-Provide a simple YAML file to configure MQTT and optional HA behavior.
+- MQTT publish support using paho-mqtt 2.x (username/password, TLS, client_id, keepalive, Last Will)
+- MQTT protocol selection (3.1, 3.1.1, 5.0)
+- Default QoS and retain settings per configuration
+- Configuration via YAML with environment variable substitution
+- Home Assistant Discovery helpers: Device/Entity classes, Status sensor, DiscoveryManager
+- One-time discovery publication with state tracking
+- Validation of HA fields with optional extension lists
+- Configurable logging levels for connection, publish, and discovery
+
+## Installation
+
+- Requires Python 3.11+
+- pip: pip install ha-mqtt-publisher
+
+## Configuration
+
+Provide a YAML configuration and use environment variables for sensitive values. The library reads nested keys like mqtt.* and home_assistant.*.
 
 Example config.yaml
-	mqtt:
-		host: localhost
-		port: 1883
-		username: user
-		password: pass
-		client_id: ha-mqtt-bridge-1
-		tls: false
-		keepalive: 60
-		base_topic: mqtt_publisher
-		lwt:
-			topic: system/ha_mqtt_publisher/status
-			payload_available: online
-			payload_not_available: offline
-			qos: 1
-			retain: true
 
-	home_assistant:
-		discovery_prefix: homeassistant
-		strict_validation: true
-		discovery_state_file: .ha_discovery_state.json
-		extra_allowed: {}
+```yaml
+mqtt:
+	broker_url: "${MQTT_BROKER_URL}"
+	broker_port: "${MQTT_BROKER_PORT}"
+	client_id: "${MQTT_CLIENT_ID}"
+	security: "${MQTT_SECURITY}"           # none | username | tls | tls_with_client_cert
+	auth:
+		username: "${MQTT_USERNAME}"
+		password: "${MQTT_PASSWORD}"
+	tls:
+		verify: "${MQTT_TLS_VERIFY}"         # true | false
+		ca_cert: "${MQTT_TLS_CA_CERT}"
+		client_cert: "${MQTT_TLS_CLIENT_CERT}"
+		client_key: "${MQTT_TLS_CLIENT_KEY}"
+	max_retries: "${MQTT_MAX_RETRIES}"
+	default_qos: "${MQTT_DEFAULT_QOS}"
+	default_retain: "${MQTT_DEFAULT_RETAIN}"
 
-Environment variables can override keys such as MQTT_HOST, MQTT_USERNAME, MQTT_PASSWORD, MQTT_PORT, etc.
+home_assistant:
+	discovery_prefix: "${HA_DISCOVERY_PREFIX}"      # default: homeassistant
+	strict_validation: "${HA_STRICT_VALIDATION}"     # true | false (default true)
+	discovery_state_file: "${HA_DISCOVERY_STATE_FILE}"
+	extra_allowed: {}  # optional extension lists (entity categories, etc.)
+```
 
-Publishing quick start
-This example uses paho-mqtt directly with configuration from YAML.
+Notes
+- Use ${VAR} placeholders and set environment variables for your runtime.
+- mqtt.* is used by the MQTTPublisher. home_assistant.* is used by discovery helpers.
 
-	import json
-	import ssl
-	from pathlib import Path
-	import paho.mqtt.client as mqtt
-	import yaml
+## Usage
 
-	cfg = yaml.safe_load(Path("config.yaml").read_text())
-	m = cfg["mqtt"]
+### Publish messages with MQTTPublisher
 
-	client = mqtt.Client(client_id=m.get("client_id"))
-	if m.get("tls"):
-			client.tls_set(cert_reqs=ssl.CERT_REQUIRED)
-	if m.get("username"):
-			client.username_pw_set(m["username"], m.get("password"))
+```python
+from ha_mqtt_publisher.config import MQTTConfig
+from ha_mqtt_publisher.publisher import MQTTPublisher
 
-	lwt = m.get("lwt", {})
-	if lwt:
-			client.will_set(
-					lwt.get("topic", "system/ha_mqtt_publisher/status"),
-					payload=lwt.get("payload_not_available", "offline"),
-					qos=int(lwt.get("qos", 1)),
-					retain=bool(lwt.get("retain", True)),
-			)
+# Build a config dict (could also load from YAML and call MQTTConfig.from_dict)
+mqtt_cfg = MQTTConfig.build_config(
+		broker_url="${MQTT_BROKER_URL}",
+		broker_port="${MQTT_BROKER_PORT}",
+		client_id="${MQTT_CLIENT_ID}",
+		security="${MQTT_SECURITY}",
+		username="${MQTT_USERNAME}",
+		password="${MQTT_PASSWORD}",
+		tls={"verify": True} if "${MQTT_SECURITY}" in ("tls", "tls_with_client_cert") else None,
+		default_qos=1,
+		default_retain=True,
+)
 
-	client.connect(m["host"], int(m.get("port", 1883)), int(m.get("keepalive", 60)))
+publisher = MQTTPublisher(config=mqtt_cfg)
+publisher.connect()
 
-	topic = f"{m.get('base_topic','mqtt_publisher')}/demo/hello"
-	client.publish(topic, json.dumps({"msg": "hello"}), qos=1, retain=True)
+publisher.publish(
+		topic="demo/hello",
+		payload="{\"msg\": \"hello\"}",
+		qos=1,
+		retain=True,
+)
 
-	client.loop_start()
-	# ... work ...
-	client.loop_stop()
-	client.disconnect()
+publisher.disconnect()
+```
 
-Subscribing quick start
-	import paho.mqtt.client as mqtt
-	from pathlib import Path
-	import yaml
+### Home Assistant Discovery
 
-	cfg = yaml.safe_load(Path("config.yaml").read_text())
-	m = cfg["mqtt"]
+Declare a device and entities, then publish discovery configs. Use one-time mode to avoid re-publishing.
 
-	def on_message(_c, _u, msg):
-			print(msg.topic, msg.payload.decode("utf-8"))
+```python
+from ha_mqtt_publisher.config import Config
+from ha_mqtt_publisher.publisher import MQTTPublisher
+from ha_mqtt_publisher.ha_discovery import Device, Sensor
+from ha_mqtt_publisher.ha_discovery import publish_discovery_configs, create_status_sensor
 
-	client = mqtt.Client(client_id=m.get("client_id", "ha-mqtt-sub"))
-	if m.get("username"):
-			client.username_pw_set(m["username"], m.get("password"))
-	client.on_message = on_message
-	client.connect(m["host"], int(m.get("port", 1883)), int(m.get("keepalive", 60)))
-	client.subscribe(f"{m.get('base_topic','mqtt_publisher')}/#", qos=1)
-	client.loop_forever()
+# Load full application config for discovery (reads mqtt.* and home_assistant.*)
+app_config = Config("config.yaml")
 
-Home Assistant discovery
-The discovery layer lets you declare devices and entities and publishes discovery topics/payloads with strong validation and helpful defaults.
+# MQTT client using the same YAML (mqtt.* section)
+publisher = MQTTPublisher(config={
+		"broker_url": app_config.get("mqtt.broker_url"),
+		"broker_port": app_config.get("mqtt.broker_port", 1883),
+		"client_id": app_config.get("mqtt.client_id", "ha-mqtt-pub"),
+		"security": app_config.get("mqtt.security", "none"),
+		"auth": app_config.get("mqtt.auth"),
+		"tls": app_config.get("mqtt.tls"),
+		"default_qos": app_config.get("mqtt.default_qos", 1),
+		"default_retain": app_config.get("mqtt.default_retain", True),
+})
+publisher.connect()
 
-Imports
-	from ha_mqtt_publisher.ha_discovery import (
-			Device,
-			StatusSensor,
-			create_sensor,
-			publish_discovery_configs,
-	)
-	from ha_mqtt_publisher.ha_discovery.constants import (
-			EntityCategory,
-			AvailabilityMode,
-			SensorStateClass,
-			SensorDeviceClass,
-			BINARY_SENSOR_DEVICE_CLASSES,
-			SENSOR_DEVICE_CLASSES,
-	)
+device = Device(app_config)
+temp = Sensor(
+		config=app_config,
+		device=device,
+		name="Room Temperature",
+		unique_id="room_temp_1",
+		state_topic="home/room/temperature",
+		unit_of_measurement="°C",
+)
 
-Minimal example
-	import paho.mqtt.client as mqtt
-	from ha_mqtt_publisher.ha_discovery import (
-			Device,
-			StatusSensor,
-			create_sensor,
-			publish_discovery_configs,
-	)
-	from ha_mqtt_publisher.ha_discovery.constants import (
-			SensorDeviceClass, SensorStateClass, EntityCategory
-	)
+status = create_status_sensor(app_config, device)
 
-	device = Device(
-			identifiers=["ha_mqtt_publisher_demo"],
-			name="HA MQTT Publisher Demo",
-			manufacturer="HA MQTT Publisher",
-			model="Example",
-			sw_version="1.0.0",
-	)
+publish_discovery_configs(
+		config=app_config,
+		publisher=publisher,
+		entities=[temp, status],
+		device=device,
+		one_time_mode=True,
+)
 
-	temperature = create_sensor(
-			name="Room Temperature",
-			unique_id="room_temp_1",
-			device=device,
-			unit_of_measurement="°C",
-			device_class=SensorDeviceClass("temperature"),
-			state_class=SensorStateClass("measurement"),
-			entity_category=None,
-	)
+# After discovery, publish state values
+publisher.publish("home/room/temperature", "23.4", qos=1, retain=True)
+```
 
-	status = StatusSensor(
-			name="Bridge Status",
-			unique_id="bridge_status",
-			device=device,
-			entity_category=EntityCategory("diagnostic"),
-	)
+### One-time publication
 
-	client = mqtt.Client()
-	client.connect("localhost", 1883, 60)
+- Enabled by passing one_time_mode=True to publish_discovery_configs.
+- Tracks published topics in home_assistant.discovery_state_file.
 
-	publish_discovery_configs(
-			client=client,
-			discovery_prefix="homeassistant",
-			entities=[temperature, status],
-			availability_mode="all",
-			state_file=".ha_discovery_state.json",
-	)
+## Supported Home Assistant components and device
 
-	client.publish(temperature.state_topic, "23.4", qos=1, retain=True)
-	client.publish(status.state_topic, "online", qos=1, retain=True)
+| Type            | Component key       | Notes |
+|-----------------|---------------------|-------|
+| Device          | device              | Device info shared by entities |
+| Sensor          | sensor              | state_topic required |
+| Binary Sensor   | binary_sensor       | state_topic required; device_class supported |
+| Switch          | switch              | command/state topics supported |
+| Light           | light               | payload_on/off defaults; command/state |
+| Cover           | cover               | payload_open/close/stop defaults |
+| Climate         | climate             | topic fields per HA spec |
+| Fan             | fan                 | payload_on/off defaults |
+| Lock            | lock                | payload_lock/unlock defaults |
+| Number          | number              | numeric set/get |
+| Select          | select              | options via extra attributes |
+| Text            | text                | text set/get |
+| Button          | button              | stateless trigger |
+| Device Tracker  | device_tracker      | presence/location topics |
+| Alarm Control   | alarm_control_panel | arm/disarm topics as applicable |
+| Camera          | camera              | image/stream topics as applicable |
+| Status Sensor   | sensor (helper)     | convenience entity for app status |
 
-Validation and extensibility
-- Strict validation: invalid HA values raise by default (toggleable via configuration)
-- extra_allowed: extend allowed sets for new HA values without waiting for a release
-	- entity_categories, availability_modes, sensor_state_classes,
-		sensor_device_classes, binary_sensor_device_classes
+Notes
+- Validation covers entity_category, availability_mode, sensor state_class, and device_class.
+- Additional allowed values can be provided via home_assistant.extra_allowed.
 
-Selected constants
-	from ha_mqtt_publisher.ha_discovery.constants import (
-			ENTITY_CATEGORIES, AVAILABILITY_MODES,
-			SENSOR_STATE_CLASSES, SENSOR_DEVICE_CLASSES,
-			BINARY_SENSOR_DEVICE_CLASSES,
-	)
+## Testing
 
-Development
-- Create a virtual environment and install dev deps
-	- pip install -U pip && pip install -e .[dev]
-- Lint and format
-	- ruff check . && ruff format .
-- Run tests
-	- pytest -q
+```bash
+pytest -q
+```
 
-FAQ
-- Do I need HA as a dependency? No, we publish HA-compatible payloads over MQTT.
-- Should I re-publish discovery every run? Not necessary; the optional state file enables one-time publishing per unique_id.
+## Development
 
-License
+- Install dev dependencies: pip install -e .[dev]
+- Lint and format: ruff check . && ruff format .
+
+## Troubleshooting
+
+- Connection refused with TLS/non-TLS port mismatch: ensure tls settings align with broker_port (1883 non-TLS, 8883 TLS).
+- Discovery not appearing: verify discovery_prefix and that MQTT messages are retained on config topics.
+
+## License
+
 MIT
+
+## Contributing
+
+Issues and pull requests are welcome in the GitHub repository.
+
+## Support
+
+Open a GitHub issue for questions and problems.
