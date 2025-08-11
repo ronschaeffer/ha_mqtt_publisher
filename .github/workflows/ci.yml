@@ -47,7 +47,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --extras dev --no-interaction --no-ansi
+        run: poetry install --all-extras --no-interaction --no-ansi
 
       - name: Show tool versions
         run: |
@@ -110,7 +110,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --extras dev --no-interaction --no-ansi
+        run: poetry install --all-extras --no-interaction --no-ansi
 
       - name: Run tests
         run: |
