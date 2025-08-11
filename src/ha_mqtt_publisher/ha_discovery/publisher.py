@@ -15,6 +15,17 @@ from .entity import Sensor
 from .status_sensor import StatusSensor
 
 
+def _slugify(value: str) -> str:
+    """Create a HA-friendly slug: lowercase, alnum+underscore only."""
+    import re
+
+    value = value.strip().lower()
+    value = re.sub(r"[\s\-]+", "_", value)
+    value = re.sub(r"[^a-z0-9_]", "", value)
+    value = re.sub(r"_+", "_", value).strip("_")
+    return value or "device"
+
+
 def publish_discovery_configs(
     config, publisher, entities=None, device=None, one_time_mode=False
 ):
@@ -177,6 +188,44 @@ def force_republish_discovery(config, publisher, entities=None, device=None):
     """
     clear_discovery_state(config)
     publish_discovery_configs(config, publisher, entities, device, one_time_mode=False)
+
+
+def publish_device_config(
+    config,
+    publisher,
+    device: Device,
+    *,
+    device_id: str | None = None,
+    retain: bool = True,
+) -> bool:
+    """
+    Publish a device-centric discovery message.
+
+    Topic format: <discovery_prefix>/device/<device_id>/config
+
+    Args:
+        config: Configuration object with get() method
+        publisher: MQTT publisher instance (must have publish() method)
+        device: Device instance to serialize
+        device_id: Optional device identifier for the topic. If not provided,
+                   uses the first identifier from the device or a slugified name.
+        retain: Retain flag for the config message (default True)
+
+    Returns:
+        bool: Success status from publisher.publish
+    """
+    discovery_prefix = config.get("home_assistant.discovery_prefix", "homeassistant")
+
+    # Determine device_id for topic
+    if not device_id:
+        if isinstance(device.identifiers, list) and device.identifiers:
+            device_id = str(device.identifiers[0])
+        else:
+            device_id = _slugify(device.name)
+
+    topic = f"{discovery_prefix}/device/{device_id}/config"
+    payload = device.get_device_info()
+    return publisher.publish(topic=topic, payload=json.dumps(payload), retain=retain)
 
 
 def create_sensor(

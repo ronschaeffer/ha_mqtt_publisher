@@ -142,6 +142,27 @@ publish_discovery_configs(
 publisher.publish("home/room/temperature", "23.4", qos=1, retain=True)
 ```
 
+### Discovery modes: entity-centric and device-centric
+
+- Entity-centric (default): Publish per-entity config to <prefix>/<component>/.../config. Each payload includes a device block for grouping.
+- Device-centric (optional): Publish one device config to <prefix>/device/<device_id>/config, then publish entities as needed.
+
+Device-centric publish example
+
+```python
+from ha_mqtt_publisher.ha_discovery import Device, publish_device_config
+
+device = Device(app_config)
+
+# Choose topic device_id explicitly, or omit to use the first identifier
+ok = publish_device_config(
+	config=app_config,
+	publisher=publisher,
+	device=device,
+	device_id="living_room_bridge",
+)
+```
+
 ### One-time publication
 
 - Enabled by passing one_time_mode=True to publish_discovery_configs.

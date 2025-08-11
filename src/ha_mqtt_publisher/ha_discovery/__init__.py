@@ -25,7 +25,12 @@ from .entity import (
     Switch,
     Text,
 )
-from .publisher import create_sensor, create_status_sensor, publish_discovery_configs
+from .publisher import (
+    create_sensor,
+    create_status_sensor,
+    publish_device_config,
+    publish_discovery_configs,
+)
 from .status_sensor import StatusSensor
 
 __all__ = [
@@ -50,5 +55,6 @@ __all__ = [
     "Text",
     "create_sensor",
     "create_status_sensor",
+    "publish_device_config",
     "publish_discovery_configs",
 ]
