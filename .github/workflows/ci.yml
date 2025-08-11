@@ -46,13 +46,14 @@ jobs:
             venv-${{ runner.os }}-3.11-
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --all-extras --no-interaction --no-ansi
+        run: poetry install --all-extras --no-root --no-interaction --no-ansi
 
       - name: Show tool versions
         run: |
           poetry --version
           poetry run python -V
+          poetry run python -c "import sys; print('venv:', sys.executable)"
+          poetry run python -c "import pytest, pre_commit; print('pytest/pre-commit import: OK')"
 
       - name: Validate Poetry configuration
         run: poetry check
@@ -109,8 +110,7 @@ jobs:
             venv-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --all-extras --no-interaction --no-ansi
+        run: poetry install --all-extras --no-root --no-interaction --no-ansi
 
       - name: Run tests
         run: |
