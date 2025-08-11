@@ -48,6 +48,15 @@ jobs:
       - name: Install dependencies
         run: poetry install --all-extras --no-root --no-interaction --no-ansi
 
+      - name: Verify test tooling
+        run: |
+          echo "🔎 Verifying pytest and pre-commit availability..."
+          if ! poetry run python -c "import pytest, pre_commit" >/dev/null 2>&1; then
+            echo "⚠️  Missing test tooling detected; installing dev extras..."
+            poetry install --extras dev --no-root --no-interaction --no-ansi
+            poetry run python -c "import pytest, pre_commit; print('pytest/pre-commit import: OK')"
+          fi
+
       - name: Show tool versions
         run: |
           poetry --version
