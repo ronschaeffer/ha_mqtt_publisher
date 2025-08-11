@@ -48,7 +48,7 @@ def default_config():
 
 def test_device_initialization_with_config(mock_config):
     """Test that the Device class initializes correctly with full config."""
-    from mqtt_publisher.ha_discovery.device import Device
+    from ha_mqtt_publisher.ha_discovery.device import Device
 
     device = Device(mock_config)
     assert device.name == "Test Device"
@@ -59,7 +59,7 @@ def test_device_initialization_with_config(mock_config):
 
 def test_device_initialization_with_defaults(default_config):
     """Test that the Device class initializes correctly with defaults."""
-    from mqtt_publisher.ha_discovery.device import Device
+    from ha_mqtt_publisher.ha_discovery.device import Device
 
     device = Device(default_config)
     assert device.name == "MQTT Publisher"
@@ -70,7 +70,7 @@ def test_device_initialization_with_defaults(default_config):
 
 def test_get_device_info(mock_config):
     """Test the generation of device info dictionary."""
-    from mqtt_publisher.ha_discovery.device import Device
+    from ha_mqtt_publisher.ha_discovery.device import Device
 
     device = Device(mock_config)
     device_info = device.get_device_info()

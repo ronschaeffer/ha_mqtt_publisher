@@ -1,6 +1,6 @@
 # home_assistant_mqtt/discovery.py
 
-from mqtt_publisher.publisher import MQTTPublisher
+from ha_mqtt_publisher.publisher import MQTTPublisher
 
 
 class HomeAssistantMQTTDiscovery:

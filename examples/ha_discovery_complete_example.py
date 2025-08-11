@@ -20,9 +20,9 @@ import json
 from pathlib import Path
 import time
 
-from mqtt_publisher import MQTTConfig, MQTTPublisher
-from mqtt_publisher.config import Config
-from mqtt_publisher.ha_discovery import (
+from ha_mqtt_publisher import MQTTConfig, MQTTPublisher
+from ha_mqtt_publisher.config import Config
+from ha_mqtt_publisher.ha_discovery import (
     Device,
     StatusSensor,
     create_sensor,
@@ -78,7 +78,7 @@ def main():
         name="Weather Station",
         model="WS-1000",
         manufacturer="Example Corp",
-        sw_version="0.2.1-599e72b-dirty",
+        sw_version="0.2.1-6c2dda7-dirty",
         configuration_url="http://weather-station.local/config",
     )
     device = device_config  # For backward compatibility with examples below

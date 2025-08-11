@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Release helper for mqtt_publisher
+# Release helper for ha-mqtt-publisher
 # Usage: ./release.sh [major|minor|patch] [--push]
 
 # Colors
@@ -101,7 +101,7 @@ fi
 
 tag_name="v${new_version}"
 print_status "Creating tag ${tag_name}"
-git add pyproject.toml src/mqtt_publisher/__init__.py
+git add pyproject.toml src/ha_mqtt_publisher/__init__.py
 git commit -m "chore: bump version to ${new_version}"
 git tag -a "${tag_name}" -m "Release ${tag_name}"
 print_success "Created tag: ${tag_name}"

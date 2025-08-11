@@ -5,7 +5,7 @@ import os
 import tempfile
 from unittest.mock import Mock, patch
 
-from mqtt_publisher.ha_discovery.publisher import (
+from ha_mqtt_publisher.ha_discovery.publisher import (
     clear_discovery_state,
     force_republish_discovery,
     publish_discovery_configs,

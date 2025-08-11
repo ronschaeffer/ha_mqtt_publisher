@@ -5,7 +5,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from mqtt_publisher.publisher import MQTTPublisher
+from ha_mqtt_publisher.config import MQTTConfig
+from ha_mqtt_publisher.publisher import MQTTPublisher
 
 
 class TestPublisherEnhancedFeatures:
@@ -237,8 +238,6 @@ class TestPublisherEnhancedFeatures:
 
     def test_from_config_builder_with_enhanced_features(self):
         """Test MQTTConfig.build_config with enhanced features."""
-        from mqtt_publisher.config import MQTTConfig
-
         config = MQTTConfig.build_config(
             broker_url="test.broker.com",
             client_id="test_client",
@@ -258,8 +257,6 @@ class TestPublisherEnhancedFeatures:
 
     def test_qos_validation_in_config_builder(self):
         """Test QoS validation in MQTTConfig.build_config."""
-        from mqtt_publisher.config import MQTTConfig
-
         with pytest.raises(ValueError, match="default_qos must be 0, 1, or 2"):
             MQTTConfig.build_config(
                 broker_url="test.broker.com",
@@ -269,8 +266,6 @@ class TestPublisherEnhancedFeatures:
 
     def test_retain_string_conversion(self):
         """Test string to boolean conversion for retain."""
-        from mqtt_publisher.config import MQTTConfig
-
         # Test various string representations
         true_values = ["true", "True", "1", "yes", "on"]
         false_values = ["false", "False", "0", "no", "off"]

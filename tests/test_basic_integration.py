@@ -23,15 +23,15 @@ class TestBasicAutomation:
 
     def test_imports_work_correctly(self):
         """Test that all main imports work."""
-        from mqtt_publisher.config import Config
-        from mqtt_publisher.ha_discovery import (
+        from ha_mqtt_publisher.config import Config
+        from ha_mqtt_publisher.ha_discovery import (
             Device,
             DiscoveryManager,
             Entity,
             StatusSensor,
             publish_discovery_configs,
         )
-        from mqtt_publisher.publisher import MQTTPublisher
+        from ha_mqtt_publisher.publisher import MQTTPublisher
 
         # All should be callable or instantiable
         assert callable(MQTTPublisher)
@@ -44,7 +44,7 @@ class TestBasicAutomation:
 
     def test_version_consistency(self):
         """Test that versions are consistent."""
-        from mqtt_publisher import __version__
+        from ha_mqtt_publisher import __version__
 
         # Read pyproject.toml version
         pyproject_path = Path("pyproject.toml")

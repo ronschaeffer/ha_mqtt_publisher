@@ -14,9 +14,9 @@ Run this after configuring your MQTT broker settings in config/config.yaml
 import json
 import time
 
-from mqtt_publisher import MQTTConfig, MQTTPublisher
-from mqtt_publisher.config import Config
-from mqtt_publisher.ha_discovery import (
+from ha_mqtt_publisher import MQTTConfig, MQTTPublisher
+from ha_mqtt_publisher.config import Config
+from ha_mqtt_publisher.ha_discovery import (
     BinarySensor,
     Device,
     Light,
@@ -38,7 +38,7 @@ def main():
         name="Smart Room Controller",
         manufacturer="Example Corp",
         model="Room-1000",
-        sw_version="0.2.1-599e72b-dirty",  # Now supported!
+        sw_version="0.2.1-6c2dda7-dirty",  # Now supported!
         configuration_url="http://192.168.1.50:8080",  # Now supported!
     )
 

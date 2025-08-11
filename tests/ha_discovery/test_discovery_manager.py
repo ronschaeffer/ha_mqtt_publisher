@@ -3,9 +3,9 @@
 import json
 from unittest.mock import Mock
 
-from mqtt_publisher.ha_discovery.device import Device
-from mqtt_publisher.ha_discovery.discovery_manager import DiscoveryManager
-from mqtt_publisher.ha_discovery.entity import Entity
+from ha_mqtt_publisher.ha_discovery.device import Device
+from ha_mqtt_publisher.ha_discovery.discovery_manager import DiscoveryManager
+from ha_mqtt_publisher.ha_discovery.entity import Entity
 
 
 class MockConfig:

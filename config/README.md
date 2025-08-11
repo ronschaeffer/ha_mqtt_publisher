@@ -3,6 +3,7 @@
 This directory contains configuration templates for the MQTT Publisher package.
 
 Note
+
 - The library's configuration loader (`MQTTConfig.from_dict`) only parses the `mqtt.*` section.
 - Any `ha_discovery.*` keys in YAML are not consumed by the library. Home Assistant discovery is configured programmatically via the `mqtt_publisher.ha_discovery` APIs (e.g., `Device`, `Entity`, `publish_discovery_configs`).
 - The HA discovery templates here are for reference/examples or for your own higher-level app configuration; they are not read by the core library at runtime.

@@ -2,7 +2,6 @@
 
 __version__ = "0.2.1"
 __author__ = "ronschaeffer"
-__email__ = "ron@ronschaeffer.com"
 
 # Import main components for easy access
 from .config import Config, MQTTConfig

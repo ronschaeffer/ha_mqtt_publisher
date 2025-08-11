@@ -1,10 +1,10 @@
 [project]
-name = "ronschaeffer-mqtt-publisher"
+name = "ha-mqtt-publisher"
 version = "0.2.1"
 description = "An MQTT publisher package"
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "ronschaeffer", email = "ron@ronschaeffer.com" }]
+authors = [{ name = "ronschaeffer" }]
 requires-python = ">=3.11"
 keywords = ["mqtt", "publisher", "iot"]
 dependencies = [
@@ -30,7 +30,7 @@ dev = [
 
 [tool.poetry]
 packages = [
-        { include = "mqtt_publisher", from = "src" }
+    { include = "ha_mqtt_publisher", from = "src" }
 ]
 package-mode = true
 
@@ -86,6 +86,6 @@ version = "0.2.0"
 tag_format = "v$version"
 version_files = [
     "pyproject.toml:project.version",
-    "src/mqtt_publisher/__init__.py:__version__"
+    "src/ha_mqtt_publisher/__init__.py:__version__"
 ]
 update_changelog_on_bump = true

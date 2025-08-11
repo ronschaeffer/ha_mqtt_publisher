@@ -4,8 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from mqtt_publisher.ha_discovery.device import Device
-from mqtt_publisher.ha_discovery.entity import Sensor
+from ha_mqtt_publisher.ha_discovery.device import Device
+from ha_mqtt_publisher.ha_discovery.entity import Sensor
 
 
 @pytest.fixture

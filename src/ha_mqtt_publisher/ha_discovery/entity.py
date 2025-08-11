@@ -10,7 +10,7 @@ supports all Home Assistant entity types through a flexible approach.
 Includes light validation for HA-compatible fields to improve
 interoperability (entity_category, availability_mode, state_class for sensors,
 and device_class for binary_sensors). Validation is non-fatal (warnings only)
-to avoid breaking existing configurations.
+by default but can be strict via config.
 """
 
 import logging
