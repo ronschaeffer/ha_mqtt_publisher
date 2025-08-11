@@ -27,7 +27,14 @@ def _slugify(value: str) -> str:
 
 
 def publish_discovery_configs(
-    config, publisher, entities=None, device=None, one_time_mode=False
+    config,
+    publisher,
+    entities=None,
+    device=None,
+    one_time_mode=False,
+    *,
+    emit_device_bundle: bool = False,
+    device_id: str | None = None,
 ):
     """
     Publishes the MQTT discovery configurations for all defined entities.
@@ -53,6 +60,19 @@ def publish_discovery_configs(
         # Conditionally add the Status Sensor
         if config.get("mqtt.topics.status"):
             entities.append(StatusSensor(config, device))
+
+    # Optionally emit device bundle first (does not use one_time_mode tracking yet)
+    if emit_device_bundle and entities:
+        try:
+            publish_device_bundle(
+                config=config,
+                publisher=publisher,
+                device=device,
+                entities=entities,
+                device_id=device_id,
+            )
+        except Exception as e:
+            print(f"Warning: device bundle publish failed: {e}")
 
     # Track published configs for one-time mode
     published_count = 0

@@ -146,6 +146,7 @@ publisher.publish("home/room/temperature", "23.4", qos=1, retain=True)
 
 - Entity-centric (default): Publish per-entity config to <prefix>/<component>/.../config. Each payload includes a device block for grouping.
 - Device-centric (optional): Publish one device config to <prefix>/device/<device_id>/config, then publish entities as needed.
+	- Optionally, publish a single bundled message that includes all entities. You can also request the bundle be emitted before per-entity topics via emit_device_bundle=True in publish_discovery_configs.
 
 Device-centric publish example
 
