@@ -32,8 +32,8 @@ jobs:
       - name: Validate Poetry configuration
         run: poetry check
 
-      - name: Install dependencies
-        run: poetry install --without dev
+      - name: Install dependencies (no root)
+        run: poetry install --no-root
 
       - name: Build package
         run: poetry build
