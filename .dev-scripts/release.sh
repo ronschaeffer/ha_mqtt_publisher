@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Release helper for ha-mqtt-publisher
-# Usage: ./release.sh [major|minor|patch] [--push]
+# Usage: ./release.sh [major|minor|patch] [--push] [--testpypi]
 
 # Colors
 RED='\033[0;31m'
@@ -35,10 +35,14 @@ print_usage() {
 # Parse args
 BUMP_TYPE=""
 PUSH=false
+TEST_PYPI=false
 for arg in "$@"; do
 	case "$arg" in
 		--push)
 			PUSH=true
+			;;
+		--testpypi)
+			TEST_PYPI=true
 			;;
 		--*)
 			# ignore unknown flags for now
@@ -115,4 +119,31 @@ if $PUSH; then
 else
 	print_warning "Not pushing by default. To push now, re-run with --push"
 	echo "git push origin ${current_branch} && git push origin ${tag_name}"
+fi
+
+# Build and optionally publish to TestPyPI
+print_status "Building distribution artifacts (sdist and wheel)..."
+poetry build
+
+if $TEST_PYPI; then
+	print_status "Publishing to TestPyPI repository 'testpypi'..."
+	# Ensure repository alias exists (idempotent)
+	poetry config repositories.testpypi https://test.pypi.org/legacy/ || true
+
+	if [[ -n "${POETRY_PYPI_TOKEN_TESTPYPI:-}" ]]; then
+		print_status "Using token from POETRY_PYPI_TOKEN_TESTPYPI"
+		POETRY_PYPI_TOKEN_TESTPYPI="${POETRY_PYPI_TOKEN_TESTPYPI}" poetry publish -r testpypi || {
+			print_error "Publish to TestPyPI failed"
+			exit 1
+		}
+	else
+		print_warning "No POETRY_PYPI_TOKEN_TESTPYPI found in env. Falling back to Poetry configured credentials."
+		poetry publish -r testpypi || {
+			print_error "Publish to TestPyPI failed (authentication likely required)"
+			exit 1
+		}
+	fi
+	print_success "Published ${tag_name} to TestPyPI"
+else
+	print_warning "Skip TestPyPI publish. Re-run with --testpypi to publish to TestPyPI."
 fi
