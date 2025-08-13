@@ -57,8 +57,10 @@ home_assistant:
 	ensure_discovery_on_startup: "${HA_ENSURE_DISCOVERY_ON_STARTUP}"  # true | false (default false)
 	ensure_discovery_timeout: "${HA_ENSURE_DISCOVERY_TIMEOUT}"        # seconds (default 2.0)
 
-	# Optional device-bundle behavior for modern HA
-	bundle_only_mode: "${HA_BUNDLE_ONLY_MODE}"        # true | false (default false)
+		# Optional device-bundle behavior for modern HA
+		bundle_only_mode: "${HA_BUNDLE_ONLY_MODE}"        # true | false (default false). When true:
+			# - publish_discovery_configs emits only the device bundle config and skips per-entity
+			# - ensure_discovery verifies the bundle topic only and can republish it if missing
 
 app:
 	# Optional metadata used for bundle origin info (o)
@@ -300,6 +302,17 @@ publish_discovery_configs(
 	one_time_mode=True,
 	emit_device_bundle=True,  # bundle first, then per-entity topics
 )
+
+Bundle-only mode
+
+If your HA supports device bundles and you don’t want per-entity discovery topics, set:
+
+```yaml
+home_assistant:
+	bundle_only_mode: true
+```
+
+Then a normal call to publish_discovery_configs with entities will publish only the bundle and skip per-entity configs.
 ```
 
 ### Discovery verification (optional self-heal)
