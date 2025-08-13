@@ -463,7 +463,7 @@ def publish_device_bundle(
 
     bundle = {
         "dev": device.get_device_info(),
-        "ents": cmps,
+        "cmps": cmps,
     }
     if origin:
         bundle["o"] = origin
