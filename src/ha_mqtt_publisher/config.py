@@ -148,6 +148,54 @@ class MQTTConfig:
         )
 
     @staticmethod
+    def from_mapping(mapping: dict, *, section: str = "mqtt") -> dict:
+        """Build config from a flat or nested mapping.
+
+        Supports keys like 'mqtt.broker_url' or nested mapping under 'mqtt'.
+        """
+
+        def _get(key: str, default=None):
+            if f"{section}.{key}" in mapping:
+                return mapping.get(f"{section}.{key}")
+            if section in mapping and isinstance(mapping[section], dict):
+                return mapping[section].get(key, default)
+            return mapping.get(key, default)
+
+        auth = _get("auth") or {}
+        return MQTTConfig.build_config(
+            broker_url=_get("broker_url"),
+            broker_port=_get("broker_port"),
+            client_id=_get("client_id"),
+            security=_get("security"),
+            username=auth.get("username") or _get("username"),
+            password=auth.get("password") or _get("password"),
+            tls=_get("tls"),
+            max_retries=_get("max_retries"),
+            last_will=_get("last_will"),
+            default_qos=_get("default_qos"),
+            default_retain=_get("default_retain"),
+            logging_config=_get("logging_config"),
+        )
+
+    @staticmethod
+    def to_publisher_kwargs(config: dict) -> dict:
+        """Convert validated config dict to kwargs for MQTTPublisher."""
+        out = {
+            "broker_url": config.get("broker_url"),
+            "broker_port": config.get("broker_port"),
+            "client_id": config.get("client_id"),
+            "security": config.get("security"),
+            "auth": config.get("auth"),
+            "tls": config.get("tls"),
+            "max_retries": config.get("max_retries"),
+            "last_will": config.get("last_will"),
+            "default_qos": config.get("default_qos"),
+            "default_retain": config.get("default_retain"),
+            "logging_config": config.get("logging_config"),
+        }
+        return out
+
+    @staticmethod
     def validate_config(config: dict) -> None:
         """Validate an MQTT configuration dictionary.
 

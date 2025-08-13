@@ -3,10 +3,10 @@
 __version__ = "0.3.2"
 __author__ = "ronschaeffer"
 
-# Import main components for easy access
+# Import main components for easy access (sorted)
+from .availability import AvailabilityPublisher, install_signal_handlers
+from .commands import CommandProcessor, Executor
 from .config import Config, MQTTConfig
-
-# Import HA discovery components
 from .ha_discovery import (
     Device,
     DiscoveryManager,
@@ -14,15 +14,32 @@ from .ha_discovery import (
     StatusSensor,
     publish_discovery_configs,
 )
+from .json_publish import publish_json, publish_many
 from .publisher import MQTTPublisher
+from .service_runner import run_service_loop, run_service_once
+from .status import StatusError, StatusPayload
+from .topic_map import TopicMap
+from .validator import validate_retained
 
 __all__ = [
+    "AvailabilityPublisher",
+    "CommandProcessor",
     "Config",
     "Device",
     "DiscoveryManager",
     "Entity",
+    "Executor",
     "MQTTConfig",
     "MQTTPublisher",
+    "StatusError",
+    "StatusPayload",
     "StatusSensor",
+    "TopicMap",
+    "install_signal_handlers",
     "publish_discovery_configs",
+    "publish_json",
+    "publish_many",
+    "run_service_loop",
+    "run_service_once",
+    "validate_retained",
 ]

@@ -12,7 +12,7 @@ import time
 
 from .constants import AvailabilityMode, EntityCategory, SensorStateClass
 from .device import Device
-from .entity import Entity, Sensor
+from .entity import Button, Entity, Sensor
 from .status_sensor import StatusSensor
 
 
@@ -394,7 +394,7 @@ def publish_device_config(
 
 
 def _entity_to_component_payload(entity: Entity) -> dict:
-    """Convert an Entity instance to a compact component payload for cmps."""
+    """Convert an Entity instance to a compact entity payload for bundle."""
     payload = entity.get_config_payload().copy()
 
     # Map to compact keys where applicable (aligning with HA docs example terms):
@@ -463,7 +463,7 @@ def publish_device_bundle(
 
     bundle = {
         "dev": device.get_device_info(),
-        "cmps": cmps,
+        "ents": cmps,
     }
     if origin:
         bundle["o"] = origin
@@ -530,3 +530,51 @@ def create_status_sensor(config, device):
         StatusSensor: Configured status sensor
     """
     return StatusSensor(config, device)
+
+
+def publish_command_buttons(
+    config,
+    publisher,
+    device: Device,
+    *,
+    base_unique_id: str,
+    base_name: str,
+    command_topic_base: str,
+    buttons: dict[str, str],
+) -> list[Button]:
+    """Publish HA button discovery entries that mirror command topics.
+
+    buttons: mapping of button_key -> human label (e.g., {"refresh": "Refresh"})
+    Returns the created Button entities.
+    """
+    entities: list[Button] = []
+    for key, label in buttons.items():
+        unique = f"{base_unique_id}_{key}"
+        ent = Button(
+            config,
+            device,
+            name=f"{base_name}: {label}",
+            unique_id=unique,
+            command_topic=f"{command_topic_base}/{key}",
+        )
+        publisher.publish(
+            topic=ent.get_config_topic(),
+            payload=json.dumps(ent.get_config_payload()),
+            retain=True,
+        )
+        entities.append(ent)
+    return entities
+
+
+def purge_legacy_discovery(
+    config,
+    publisher,
+    *,
+    topics: list[str],
+) -> None:
+    """Idempotently clear legacy retained discovery configs by publishing empty payloads."""
+    for t in topics:
+        try:
+            publisher.publish(topic=t, payload="", retain=True)
+        except Exception:
+            pass
