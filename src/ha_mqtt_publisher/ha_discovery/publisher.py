@@ -62,6 +62,9 @@ def publish_discovery_configs(
         if config.get("mqtt.topics.status"):
             entities.append(StatusSensor(config, device))
 
+    # Determine bundle-only behavior (default False for backward compatibility)
+    bundle_only_mode = bool(config.get("home_assistant.bundle_only_mode", False))
+
     # Optionally run a verification pass to heal missing retained configs
     # Only when explicitly enabled and when publisher supports subscriptions.
     ensure_enabled = config.get("home_assistant.ensure_discovery_on_startup", False)
@@ -86,8 +89,8 @@ def publish_discovery_configs(
             )
         except Exception as e:
             print(f"Warning: ensure_discovery failed: {e}")
-    elif emit_device_bundle and entities:
-        # If ensure_discovery isn't used, optionally emit device bundle first
+    elif (emit_device_bundle or bundle_only_mode) and entities:
+        # If ensure_discovery isn't used, optionally emit or always emit device bundle first
         try:
             publish_device_bundle(
                 config=config,
@@ -98,6 +101,12 @@ def publish_discovery_configs(
             )
         except Exception as e:
             print(f"Warning: device bundle publish failed: {e}")
+
+    # If bundle-only mode, skip per-entity discovery publishes
+    if bundle_only_mode:
+        if one_time_mode:
+            print("One-time discovery mode (bundle-only): Per-entity configs skipped")
+        return
 
     # Track published configs for one-time mode
     published_count = 0

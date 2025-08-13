@@ -33,9 +33,11 @@ from .publisher import (
     create_sensor,
     create_status_sensor,
     ensure_discovery,
+    publish_command_buttons,
     publish_device_bundle,
     publish_device_config,
     publish_discovery_configs,
+    purge_legacy_discovery,
 )
 
 __all__ = [
@@ -64,7 +66,9 @@ __all__ = [
     "create_sensor",
     "create_status_sensor",
     "ensure_discovery",
+    "publish_command_buttons",
     "publish_device_bundle",
     "publish_device_config",
     "publish_discovery_configs",
+    "purge_legacy_discovery",
 ]
