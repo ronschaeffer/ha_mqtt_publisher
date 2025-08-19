@@ -6,6 +6,12 @@ from typing import Any
 
 import paho.mqtt.client as mqtt
 
+from ha_mqtt_publisher.mqtt_utils import (
+    safe_on_connect,
+    safe_on_disconnect,
+    safe_on_publish,
+)
+
 # Set up logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -249,9 +255,17 @@ class MQTTPublisher:
 
         # Create MQTT client with backwards compatibility
         if hasattr(mqtt, "CallbackAPIVersion"):
-            # paho-mqtt >= 2.0.0 - use modern callback API
+            # Choose callback API version consistent with chosen MQTT protocol
+            try:
+                if protocol_version == mqtt.MQTTv5:
+                    cb = mqtt.CallbackAPIVersion.VERSION2
+                else:
+                    cb = mqtt.CallbackAPIVersion.VERSION1
+            except Exception:
+                cb = mqtt.CallbackAPIVersion.VERSION2
+
             self.client = mqtt.Client(
-                callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+                callback_api_version=cb,
                 client_id=self.client_id,
                 protocol=protocol_version,
             )
@@ -272,30 +286,44 @@ class MQTTPublisher:
             )
 
         # Configure security based on type
-        if self.security in ["username", "tls", "tls_with_client_cert"]:
-            user = self.auth.get("username")
-            pwd = self.auth.get("password")
-            # Validation already checked these exist, but add defensive check
-            if user and pwd:
-                self.client.username_pw_set(user, pwd)
+        # Always apply username/password if provided
+        user = self.auth.get("username") if self.auth else None
+        pwd = self.auth.get("password") if self.auth else None
+        if user and pwd:
+            self.client.username_pw_set(user, pwd)
 
-        if self.security in ["tls", "tls_with_client_cert"]:
-            if self.tls:
-                self.client.tls_set(
-                    ca_certs=self.tls.get("ca_cert"),
-                    certfile=self.tls.get("client_cert"),
-                    keyfile=self.tls.get("client_key"),
-                    cert_reqs=(
-                        ssl.CERT_REQUIRED if self.tls.get("verify") else ssl.CERT_NONE
-                    ),
-                    tls_version=ssl.PROTOCOL_TLS,
-                )
-                self.client.tls_insecure_set(not self.tls.get("verify", True))
+        # Enable TLS whenever TLS configuration is present (regardless of 'security'
+        # string). Previously TLS was only applied when security=='tls' which caused
+        # clients that supplied TLS settings with security='username' to attempt a
+        # non-TLS connect to a TLS port (causing broker disconnects).
+        if self.tls:
+            self.client.tls_set(
+                ca_certs=self.tls.get("ca_cert"),
+                certfile=self.tls.get("client_cert"),
+                keyfile=self.tls.get("client_key"),
+                cert_reqs=(
+                    ssl.CERT_REQUIRED if self.tls.get("verify") else ssl.CERT_NONE
+                ),
+                tls_version=ssl.PROTOCOL_TLS,
+            )
+            self.client.tls_insecure_set(not self.tls.get("verify", True))
 
         # Set up callbacks
-        self.client.on_connect = self._on_connect
-        self.client.on_disconnect = self._on_disconnect
-        self.client.on_publish = self._on_publish
+        # Wrap connect/disconnect/publish handlers to normalize v1/v2 signatures
+        try:
+            self.client.on_connect = safe_on_connect(self._on_connect)
+        except Exception:
+            self.client.on_connect = self._on_connect
+        # Wrap disconnect/publish handlers to be tolerant of v1/v2 signatures from paho
+        try:
+            self.client.on_disconnect = safe_on_disconnect(self._on_disconnect)
+        except Exception:
+            self.client.on_disconnect = self._on_disconnect
+
+        try:
+            self.client.on_publish = safe_on_publish(self._on_publish)
+        except Exception:
+            self.client.on_publish = self._on_publish
 
     def _get_connection_error_message(self, error_code) -> str:
         """Provide helpful error messages for common connection issues."""
@@ -326,20 +354,149 @@ class MQTTPublisher:
 
         return base_message
 
-    def _on_connect(self, client, userdata, flags, reason_code, properties):
-        if reason_code == 0:
+    def _on_connect(self, client, userdata, *args):
+        """Normalized and tolerant on_connect handler.
+
+        Supports both older paho signatures (client, userdata, flags, rc, props)
+        and modern signatures (client, userdata, rc, props). We extract the
+        reason_code and properties from the positional args and then reuse the
+        existing success/error handling logic.
+        """
+        # Extract reason_code and properties from possible arg shapes
+        reason_code = None
+        properties = None
+        try:
+            if len(args) == 2:
+                # (reason_code, properties)
+                reason_code, properties = args
+            elif len(args) == 3:
+                # (flags, reason_code, properties)
+                _, reason_code, properties = args
+            elif len(args) == 1:
+                # (reason_code,) - best-effort
+                reason_code = args[0]
+        except Exception:
+            reason_code = None
+            properties = None
+
+        # Accept multiple forms of success: int-like 0, ReasonCode objects that
+        # cast to 0, or missing reason_code accompanied by v5 properties (ConnAck).
+        success = False
+        try:
+            if reason_code is None:
+                # If properties present (MQTTv5 ConnAck properties) assume success
+                success = properties is not None
+            else:
+                # Try numeric conversion where possible
+                success = (
+                    int(reason_code) == 0
+                    if hasattr(reason_code, "__int__")
+                    else reason_code == 0
+                )
+        except Exception:
+            success = False
+
+        if success:
             self._connected = True
             self.connection_logger.info("Connected to MQTT broker")
-        else:
+            return
+
+        # Not successful - log helpful guidance
+        try:
             error_msg = self._get_connection_error_message(reason_code)
-            self.connection_logger.error(error_msg)
+        except Exception:
+            error_msg = f"Unknown connection error: {reason_code}"
+        self.connection_logger.error(error_msg)
 
-    def _on_disconnect(self, client, userdata, flags, reason_code, properties):
+    def _on_disconnect(self, client, userdata, *args):
+        """Tolerant on_disconnect handler supporting multiple callback shapes.
+
+        Supports: (client, userdata, rc, props) and (client, userdata, flags, rc, props)
+        """
         self._connected = False
-        if reason_code != 0:
-            self.connection_logger.warning(f"Unexpected disconnection {reason_code}")
 
-    def _on_publish(self, client, userdata, mid, reason_codes, properties):
+        # Extract reason_code and properties from args
+        reason_code = None
+        properties = None
+        try:
+            if len(args) == 2:
+                reason_code, properties = args
+            elif len(args) == 3:
+                _, reason_code, properties = args
+            elif len(args) == 1:
+                reason_code = args[0]
+        except Exception:
+            reason_code = None
+            properties = None
+
+        # Best-effort numeric reason code for uniform handling
+        try:
+            rc_int = (
+                int(reason_code) if hasattr(reason_code, "__int__") else reason_code
+            )
+        except Exception:
+            rc_int = reason_code
+
+        if rc_int != 0:
+            # Extract useful properties where available to aid debugging
+            prop_repr = None
+            try:
+                if properties is None:
+                    prop_repr = None
+                else:
+                    props = {}
+                    for attr in (
+                        "ReasonString",
+                        "ServerReference",
+                        "UserProperty",
+                        "SessionExpiryInterval",
+                        "AuthenticationMethod",
+                    ):
+                        if hasattr(properties, attr):
+                            try:
+                                props[attr] = getattr(properties, attr)
+                            except Exception:
+                                props[attr] = repr(getattr(properties, attr))
+                    if not props:
+                        try:
+                            prop_items = {}
+                            for k in dir(properties):
+                                if k.startswith("_"):
+                                    continue
+                                try:
+                                    v = getattr(properties, k)
+                                except Exception:
+                                    continue
+                                if callable(v):
+                                    continue
+                                prop_items[k] = v
+                            prop_repr = prop_items
+                        except Exception:
+                            prop_repr = repr(properties)
+                    else:
+                        prop_repr = props
+            except Exception:
+                prop_repr = repr(properties)
+
+            self.connection_logger.warning(
+                "Unexpected disconnection rc=%r rc_int=%s properties=%s",
+                reason_code,
+                rc_int,
+                prop_repr,
+            )
+
+    def _on_publish(self, client, userdata, *args):
+        """Tolerant on_publish handler that accepts legacy and v5 signatures.
+
+        Common shapes: (client, userdata, mid) or (client, userdata, mid, reason_codes, properties)
+        """
+        mid = None
+        try:
+            if len(args) >= 1:
+                mid = args[0]
+        except Exception:
+            mid = None
+
         self.publish_logger.debug(f"Message published with ID: {mid}")
 
     def connect(self) -> bool:

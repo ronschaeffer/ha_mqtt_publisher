@@ -9,6 +9,7 @@ to MQTT brokers for Home Assistant auto-discovery.
 
 import json
 import time
+from typing import Any
 
 from .constants import AvailabilityMode, EntityCategory, SensorStateClass
 from .device import Device
@@ -87,8 +88,8 @@ def publish_discovery_configs(
                 ),
                 one_time_mode=True,
             )
-        except Exception as e:
-            print(f"Warning: ensure_discovery failed: {e}")
+        except Exception as exc:
+            print(f"Warning: ensure_discovery failed: {exc}")
     elif (emit_device_bundle or bundle_only_mode) and entities:
         # If ensure_discovery isn't used, optionally emit or always emit device bundle first
         try:
@@ -99,8 +100,8 @@ def publish_discovery_configs(
                 entities=entities,
                 device_id=device_id,
             )
-        except Exception as e:
-            print(f"Warning: device bundle publish failed: {e}")
+        except Exception as exc:
+            print(f"Warning: device bundle publish failed: {exc}")
 
     # If bundle-only mode, skip per-entity discovery publishes
     if bundle_only_mode:
@@ -203,8 +204,8 @@ def _mark_discovery_as_published(config_topic, config):
         try:
             with open(state_file, "w") as f:
                 json.dump(published_configs, f, indent=2)
-        except OSError as e:
-            print(f"Warning: Could not save discovery state: {e}")
+        except OSError as exc:
+            print(f"Warning: Could not save discovery state: {exc}")
 
 
 def clear_discovery_state(config):
@@ -224,8 +225,8 @@ def clear_discovery_state(config):
         try:
             os.remove(state_file)
             print(f"Cleared discovery state file: {state_file}")
-        except OSError as e:
-            print(f"Warning: Could not remove discovery state file: {e}")
+        except OSError as exc:
+            print(f"Warning: Could not remove discovery state file: {exc}")
     else:
         print("Discovery state file does not exist")
 
@@ -336,8 +337,8 @@ def ensure_discovery(
                 republished.add(bundle_topic)
                 if one_time_mode:
                     _mark_discovery_as_published(bundle_topic, config)
-        except Exception as e:
-            print(f"Warning: failed to republish bundle discovery: {e}")
+        except Exception as exc:
+            print(f"Warning: failed to republish bundle discovery: {exc}")
 
     # Republish missing per-entity topics
     if entities and not bundle_only_mode:
@@ -350,8 +351,8 @@ def ensure_discovery(
                     republished.add(t)
                     if one_time_mode:
                         _mark_discovery_as_published(t, config)
-                except Exception as e:
-                    print(f"Warning: failed to republish discovery for {t}: {e}")
+                except Exception as exc:
+                    print(f"Warning: failed to republish discovery for {t}: {exc}")
 
     # Optionally mark seen topics as published in one-time mode
     if one_time_mode:
@@ -470,7 +471,7 @@ def publish_device_bundle(
     }
     origin = {k: v for k, v in origin.items() if v}
 
-    bundle = {
+    bundle: dict[str, Any] = {
         "dev": device.get_device_info(),
         "cmps": cmps,
     }
