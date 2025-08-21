@@ -21,13 +21,13 @@ A Python MQTT publishing library with Home Assistant MQTT Discovery support.
 ## Installation
 
 - Requires Python 3.11+
-- pip: pip install ha-mqtt-publisher
+- pip: `pip install ha-mqtt-publisher`
 
 ## Configuration
 
-Provide a YAML configuration and use environment variables for sensitive values. The library reads nested keys like mqtt.* and home_assistant.*.
+Provide a YAML configuration and use environment variables for sensitive values. The library reads nested keys like `mqtt.*` and `home_assistant.*`.
 
-Example config.yaml
+Example `config.yaml`:
 
 ```yaml
 mqtt:
@@ -69,14 +69,15 @@ app:
 	configuration_url: "${APP_CONFIGURATION_URL}"
 ```
 
-Notes
-- Use ${VAR} placeholders and set environment variables for your runtime.
-- mqtt.* is used by the MQTTPublisher. home_assistant.* is used by discovery helpers.
-- app.* is optional and only used to populate origin metadata in bundled device configs.
+**Notes:**
+
+- Use `${VAR}` placeholders and set environment variables for your runtime.
+- `mqtt.*` is used by the `MQTTPublisher`. `home_assistant.*` is used by discovery helpers.
+- `app.*` is optional and only used to populate origin metadata in bundled device configs.
 
 ### Quick reference: configuration keys
 
-Home Assistant (home_assistant.*)
+Home Assistant (`home_assistant.*`)
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
@@ -88,17 +89,17 @@ Home Assistant (home_assistant.*)
 | ensure_discovery_timeout | float | 2.0 | Wait time for retained discovery messages |
 | bundle_only_mode | bool | false | For modern HA: verify/publish only the device bundle topic |
 
-Application metadata (app.*) used in bundled device origin block (optional)
+Application metadata (`app.*`) used in bundled device origin block (optional)
 
 | Key | Type | Purpose |
 |-----|------|---------|
-| name | string | App name for origin (o.name) |
-| sw_version | string | App/software version (o.sw) |
-| configuration_url | string | URL to docs/config (o.url) |
+| name | string | App name for origin (`o.name`) |
+| sw_version | string | App/software version (`o.sw`) |
+| configuration_url | string | URL to docs/config (`o.url`) |
 
 ## Usage
 
-### Publish messages with MQTTPublisher
+### Publish messages with `MQTTPublisher`
 
 ```python
 from ha_mqtt_publisher.config import MQTTConfig
@@ -182,20 +183,21 @@ publisher.publish("home/room/temperature", "23.4", qos=1, retain=True)
 
 ### Discovery modes: entity-centric and device-centric
 
-- Entity-centric (default): Publish per-entity config to <prefix>/<component>/.../config. Each payload includes a device block for grouping.
-- Device-centric (optional): Publish one device config to <prefix>/device/<device_id>/config, then publish entities as needed.
-	- Optionally, publish a single bundled message that includes all entities. You can also request the bundle be emitted before per-entity topics via emit_device_bundle=True in publish_discovery_configs.
+- Entity-centric (default): Publish per-entity config to `<prefix>/<component>/.../config`. Each payload includes a device block for grouping.
+- Device-centric (optional): Publish one device config to `<prefix>/device/<device_id>/config`, then publish entities as needed.
+	- Optionally, publish a single bundled message that includes all entities. You can also request the bundle be emitted before per-entity topics via `emit_device_bundle=True` in `publish_discovery_configs`.
 
 #### Which mode should I use?
 
 - Use entity-centric when you need maximum backward compatibility with all HA versions or want explicit per-entity config topics.
 - Use device bundle when your HA supports the bundled device config for faster provisioning, single-topic idempotency, and cleaner device metadata. You can still publish per-entity topics alongside the bundle by default.
 
-Key differences
+**Key differences:**
+
 - Topic shape: entity-centric uses component topics per entity; bundle uses one device topic plus runtime state topics.
-- Device block: per-entity configs repeat device metadata; bundle has a single dev block.
-- Keys inside bundle: entities are keyed by unique_id; entity-centric uses object_id in topic paths.
-- Transport defaults: bundle may include qos/retain as top-level hints; per-entity uses transport options only.
+- Device block: per-entity configs repeat device metadata; bundle has a single `dev` block.
+- Keys inside bundle: entities are keyed by `unique_id`; entity-centric uses `object_id` in topic paths.
+- Transport defaults: bundle may include `qos`/`retain` as top-level hints; per-entity uses transport options only.
 
 Device-centric publish example
 
@@ -233,29 +235,29 @@ publish_device_bundle(
 
 ### One-time publication
 
-- Enabled by passing one_time_mode=True to publish_discovery_configs.
-- Tracks published topics in home_assistant.discovery_state_file.
+- Enabled by passing `one_time_mode=True` to `publish_discovery_configs`.
+- Tracks published topics in `home_assistant.discovery_state_file`.
 
 ## Supported Home Assistant components
 
 ### About "Device" (registry grouping)
 
-- Device is metadata included in each entity's discovery payload; it is not a standalone component or topic.
+- `Device` is metadata included in each entity's discovery payload; it is not a standalone component or topic.
 - Home Assistant uses it to group entities in the Device Registry and display manufacturer/model, versions, and links.
-- Create one Device per physical/logical device and pass it to all related entities; removal happens when all related entities are removed.
+- Create one `Device` per physical/logical device and pass it to all related entities; removal happens when all related entities are removed.
 
 ### Components
 
 | Type            | Component key       | Notes |
 |-----------------|---------------------|-------|
-| Sensor          | sensor              | state_topic required |
-| Binary Sensor   | binary_sensor       | state_topic required; device_class supported |
-| Switch          | switch              | command/state topics supported |
-| Light           | light               | payload_on/off defaults; command/state |
-| Cover           | cover               | payload_open/close/stop defaults |
+| Sensor          | sensor              | `state_topic` required |
+| Binary Sensor   | binary_sensor       | `state_topic` required; `device_class` supported |
+| Switch          | switch              | `command`/`state` topics supported |
+| Light           | light               | `payload_on`/`off` defaults; `command`/`state` |
+| Cover           | cover               | `payload_open`/`close`/`stop` defaults |
 | Climate         | climate             | topic fields per HA spec |
-| Fan             | fan                 | payload_on/off defaults |
-| Lock            | lock                | payload_lock/unlock defaults |
+| Fan             | fan                 | `payload_on`/`off` defaults |
+| Lock            | lock                | `payload_lock`/`unlock` defaults |
 | Number          | number              | numeric set/get |
 | Select          | select              | options via extra attributes |
 | Text            | text                | text set/get |
@@ -265,9 +267,10 @@ publish_device_bundle(
 | Camera          | camera              | image/stream topics as applicable |
 | Status Sensor   | sensor (helper)     | convenience entity for app status |
 
-Notes
-- Validation covers entity_category, availability_mode, sensor state_class, and device_class.
-- Additional allowed values can be provided via home_assistant.extra_allowed.
+**Notes:**
+
+- Validation covers `entity_category`, `availability_mode`, sensor `state_class`, and `device_class`.
+- Additional allowed values can be provided via `home_assistant.extra_allowed`.
 
 ## Testing
 
@@ -289,9 +292,10 @@ ensure_discovery(
 	one_time_mode=True,
 )
 ```
-See also: examples/entity_verification.py
 
-Emit device bundle within publish_discovery_configs
+See also: `examples/entity_verification.py`
+
+Emit device bundle within `publish_discovery_configs`
 
 ```python
 publish_discovery_configs(
@@ -302,6 +306,7 @@ publish_discovery_configs(
 	one_time_mode=True,
 	emit_device_bundle=True,  # bundle first, then per-entity topics
 )
+```
 
 Bundle-only mode
 
@@ -312,17 +317,16 @@ home_assistant:
 	bundle_only_mode: true
 ```
 
-Then a normal call to publish_discovery_configs with entities will publish only the bundle and skip per-entity configs.
-```
+Then a normal call to `publish_discovery_configs` with entities will publish only the bundle and skip per-entity configs.
 
 ### Discovery verification (optional self-heal)
 
 If you want the library to verify retained discovery topics exist on the broker and republish any that are missing, enable the verification pass when using one-time mode.
 
 - Config flags:
-  - home_assistant.ensure_discovery_on_startup: true|false (default false)
-  - home_assistant.ensure_discovery_timeout: float seconds (default 2.0)
-  - home_assistant.bundle_only_mode: true|false (default false). When true, verification checks only the device bundle topic and republishes it if missing.
+  - `home_assistant.ensure_discovery_on_startup`: `true`\|`false` (default `false`)
+  - `home_assistant.ensure_discovery_timeout`: float seconds (default `2.0`)
+  - `home_assistant.bundle_only_mode`: `true`\|`false` (default `false`). When true, verification checks only the device bundle topic and republishes it if missing.
 
 Lightweight example
 
@@ -366,17 +370,17 @@ ensure_discovery(
 )
 ```
 
-See also: examples/bundle_only_verification.py
+See also: `examples/bundle_only_verification.py`
 
 ## Development
 
-- Install dev dependencies: pip install -e .[dev]
-- Lint and format: ruff check . && ruff format .
+- Install dev dependencies: `pip install -e .[dev]`
+- Lint and format: `ruff check . && ruff format .`
 
 ## Troubleshooting
 
-- Connection refused with TLS/non-TLS port mismatch: ensure tls settings align with broker_port (1883 non-TLS, 8883 TLS).
-- Discovery not appearing: verify discovery_prefix and that MQTT messages are retained on config topics.
+- Connection refused with TLS/non-TLS port mismatch: ensure TLS settings align with `broker_port` (1883 non-TLS, 8883 TLS).
+- Discovery not appearing: verify `discovery_prefix` and that MQTT messages are retained on config topics.
 
 ## License
 
