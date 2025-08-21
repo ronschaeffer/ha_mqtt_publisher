@@ -7,6 +7,11 @@ management, and discovery publishing helpers.
 
 from .device import Device
 from .discovery_manager import DiscoveryManager
+from .enhanced_publisher import (
+    create_command_entities,
+    create_standard_buttons,
+    publish_device_level_discovery,
+)
 from .entity import (
     AlarmControlPanel,
     BinarySensor,
@@ -38,11 +43,6 @@ from .publisher import (
     publish_device_config,
     publish_discovery_configs,
     purge_legacy_discovery,
-)
-from .enhanced_publisher import (
-    create_command_entities,
-    create_standard_buttons,
-    publish_device_level_discovery,
 )
 
 __all__ = [

@@ -5,9 +5,7 @@ import json
 from ha_mqtt_publisher.ha_discovery import (
     Device,
     Sensor,
-    Button,
     create_command_entities,
-    create_standard_buttons,
     publish_device_level_discovery,
 )
 
@@ -33,9 +31,11 @@ def test_create_command_entities():
     """Test creating command system entities using Entity objects."""
     config = StubConfig()
     device = Device(config, identifiers=["test"], name="Test Device")
-    
+
     entities = create_command_entities(
-        config, device, "test_app",
+        config,
+        device,
+        "test_app",
         {
             "ack_topic": "test/ack",
             "result_topic": "test/result",
@@ -44,7 +44,7 @@ def test_create_command_entities():
 
     assert len(entities) == 2
     assert all(isinstance(e, Sensor) for e in entities)
-    
+
     ack_entity = next(e for e in entities if e.unique_id.endswith("_cmd_ack"))
     assert ack_entity.name == "Command Ack"
     assert ack_entity.state_topic == "test/ack"

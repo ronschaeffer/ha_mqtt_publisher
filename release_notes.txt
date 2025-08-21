@@ -1,15 +1,17 @@
-*   **Core Functionality:**
-    *   Added `mqtt_utils` module with utility functions and tests.
-    *   Introduced `message_handler` helper function and associated tests.
+**Enhanced Device Discovery**
+- Added Entity-based device discovery with proper OOP patterns
+- New `enhanced_publisher.py` module with Entity object support
+- Replaced hardcoded dictionary approach with type-safe Entity classes
+- Added helper functions for command systems and standard buttons
 
-*   **Home Assistant Discovery:**
-    *   Updated Home Assistant discovery publisher.
+**Developer Experience Improvements**
+- Enhanced AI-powered release script with automated documentation updates
+- Improved version synchronization script to exclude examples from modifications
+- Added comprehensive test coverage for enhanced discovery functionality
+- Migration example for twickenham_events integration
 
-*   **Development & Infrastructure:**
-    *   Added `__init__.py` to the `src` path for easier module importing.
-    *   Implemented module aliasing for cleaner imports.
-    *   Updated software version in examples and synchronization script.
-    *   Tweaked the version synchronization script.
-
-*   **Documentation & Examples:**
-    *   Updated examples and documentation.
+**Code Quality & Maintenance**
+- Fixed version sync script to avoid noise in releases
+- Enhanced error handling in AI scripts with workspace integration
+- Improved release process with selective file staging
+- Better example file management with stable version numbers

@@ -126,7 +126,7 @@ if $PUSH; then
 	git push origin "$current_branch"
 	git push origin "$tag_name"
 	print_success "Pushed tag ${tag_name}"
-	
+
 	if command -v gh &> /dev/null; then
 		print_status "Creating GitHub release with AI-generated notes..."
 		gh release create "$tag_name" --title "$release_title" --notes-file "$release_notes_file"

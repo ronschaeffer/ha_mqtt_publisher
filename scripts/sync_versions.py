@@ -193,7 +193,9 @@ class VersionSync:
         ]
 
         # Use clean version for example files to keep them stable
-        version_to_use = self.version if "example" in str(ha_path).lower() else self.git_version
+        version_to_use = (
+            self.version if "example" in str(ha_path).lower() else self.git_version
+        )
 
         updated = False
         new_content = content
