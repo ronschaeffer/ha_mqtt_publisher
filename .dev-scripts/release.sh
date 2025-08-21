@@ -92,19 +92,33 @@ poetry version "${BUMP_TYPE}"
 new_version=$(poetry version --short)
 print_success "Version bumped to ${new_version}"
 
+print_status "Running documentation update/check via AI agent..."
+poetry run python /home/ron/projects/ai-scripts/update_docs.py . || true
+
 print_status "Synchronizing version across files..."
 if command -v python3 &> /dev/null; then
-	python3 scripts/sync_versions.py
+	python3 scripts/sync_versions.py || true
 else
-	poetry run python scripts/sync_versions.py
+	poetry run python scripts/sync_versions.py || true
 fi
 
 tag_name="v${new_version}"
 print_status "Creating tag ${tag_name}"
-git add pyproject.toml src/ha_mqtt_publisher/__init__.py
+# Add only the files that should be part of version bump
+git add pyproject.toml
+git add src/*//__init__.py 2>/dev/null || true
+git add README.md 2>/dev/null || true
+git add CHANGELOG.md 2>/dev/null || true
 git commit -m "chore: bump version to ${new_version}"
 git tag -a "${tag_name}" -m "Release ${tag_name}"
 print_success "Created tag: ${tag_name}"
+
+# Generate release notes using AI agent
+print_status "Generating release notes via AI agent..."
+poetry run python /home/ron/projects/ai-scripts/generate_release_notes.py . || true
+
+release_notes_file="release_notes.txt"
+release_title="Release ${tag_name}"
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 if $PUSH; then
@@ -112,6 +126,14 @@ if $PUSH; then
 	git push origin "$current_branch"
 	git push origin "$tag_name"
 	print_success "Pushed tag ${tag_name}"
+	
+	if command -v gh &> /dev/null; then
+		print_status "Creating GitHub release with AI-generated notes..."
+		gh release create "$tag_name" --title "$release_title" --notes-file "$release_notes_file"
+		print_success "GitHub release created: $tag_name"
+	else
+		print_warning "GitHub CLI (gh) not found. Release notes not published to GitHub."
+	fi
 else
 	print_warning "Not pushing by default. To push now, re-run with --push"
 	echo "git push origin ${current_branch} && git push origin ${tag_name}"

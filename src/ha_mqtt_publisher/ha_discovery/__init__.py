@@ -39,6 +39,11 @@ from .publisher import (
     publish_discovery_configs,
     purge_legacy_discovery,
 )
+from .enhanced_publisher import (
+    create_command_entities,
+    create_standard_buttons,
+    publish_device_level_discovery,
+)
 
 __all__ = [
     "AlarmControlPanel",
@@ -63,12 +68,15 @@ __all__ = [
     "StatusSensor",
     "Switch",
     "Text",
+    "create_command_entities",
     "create_sensor",
+    "create_standard_buttons",
     "create_status_sensor",
     "ensure_discovery",
     "publish_command_buttons",
     "publish_device_bundle",
     "publish_device_config",
+    "publish_device_level_discovery",
     "publish_discovery_configs",
     "purge_legacy_discovery",
 ]

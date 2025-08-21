@@ -1,0 +1,15 @@
+*   **Core Functionality:**
+    *   Added `mqtt_utils` module with utility functions and tests.
+    *   Introduced `message_handler` helper function and associated tests.
+
+*   **Home Assistant Discovery:**
+    *   Updated Home Assistant discovery publisher.
+
+*   **Development & Infrastructure:**
+    *   Added `__init__.py` to the `src` path for easier module importing.
+    *   Implemented module aliasing for cleaner imports.
+    *   Updated software version in examples and synchronization script.
+    *   Tweaked the version synchronization script.
+
+*   **Documentation & Examples:**
+    *   Updated examples and documentation.

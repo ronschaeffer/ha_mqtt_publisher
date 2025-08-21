@@ -74,12 +74,12 @@ def main():
     # Create device representing your application
     device_config = Device(
         config,
-        identifiers=["weather_station_01"],
-        name="Weather Station",
-        model="WS-1000",
-        manufacturer="Example Corp",
-        sw_version="0.3.3-ba2a6a5-dirty",
-        configuration_url="http://weather-station.local/config",
+        identifiers=["my_unique_device_id"],
+        name="My Test Device",
+        model="Test Model",
+        manufacturer="Test Manufacturer",
+        sw_version="0.3.3",
+        configuration_url="http://192.168.1.100:8080",
     )
     device = device_config  # For backward compatibility with examples below
     print(f"📱 Created device: {device.name}")

@@ -123,9 +123,15 @@ class VersionSync:
                 if not any(part.startswith(".") for part in file_path.parts):
                     ha_files.extend([file_path])
 
-        # Also look for Python files with device definitions
+        # Also look for Python files with device definitions (but exclude examples and scripts)
         for py_file in self.project_root.rglob("*.py"):
             if not any(part.startswith(".") for part in py_file.parts):
+                # Skip example files - they should have stable versions
+                if "example" in str(py_file).lower():
+                    continue
+                # Skip script files to avoid recursive modifications
+                if py_file.is_relative_to(self.project_root / "scripts"):
+                    continue
                 if any(
                     keyword in py_file.read_text()
                     for keyword in ["sw_version", "device_version"]
@@ -180,22 +186,21 @@ class VersionSync:
             # Skip binary files
             return False
 
-        # Pattern to match sw_version: "0.3.3-ba2a6a5-dirty" or sw_version="x.y.z"
+        # Pattern to match sw_version: "0.3.3-c2b5221-dirty" or sw_version="x.y.z"
         sw_version_patterns = [
             r'(\s*sw_version:\s*)["\'][^"\']*["\']',  # YAML format
             r'(sw_version\s*=\s*)["\'][^"\']*["\']',  # Python format
         ]
+
+        # Use clean version for example files to keep them stable
+        version_to_use = self.version if "example" in str(ha_path).lower() else self.git_version
 
         updated = False
         new_content = content
 
         for pattern in sw_version_patterns:
             if re.search(pattern, content):
-                if ha_path.suffix in [".yaml", ".yml"]:
-                    replacement = rf'\1"{self.git_version}"'
-                else:
-                    replacement = rf'\1"{self.git_version}"'
-
+                replacement = rf'\1"{version_to_use}"'
                 new_content = re.sub(pattern, replacement, new_content)
                 updated = True
                 break
@@ -204,7 +209,7 @@ class VersionSync:
             if not check_only:
                 ha_path.write_text(new_content)
                 print(
-                    f"✅ Updated {ha_path.relative_to(self.project_root)}: {self.git_version}"
+                    f"✅ Updated {ha_path.relative_to(self.project_root)}: {version_to_use}"
                 )
             else:
                 print(
