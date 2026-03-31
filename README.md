@@ -1,7 +1,7 @@
 HA MQTT Publisher
 
 [![PyPI](https://img.shields.io/pypi/v/ha-mqtt-publisher.svg)](https://pypi.org/project/ha-mqtt-publisher/)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
@@ -14,13 +14,19 @@ A Python MQTT publishing library with Home Assistant MQTT Discovery support.
 - Default QoS and retain settings per configuration
 - Configuration via YAML with environment variable substitution
 - Home Assistant Discovery helpers: Device/Entity classes, Status sensor, DiscoveryManager
+- Device bundle discovery (single-topic, multi-entity)
 - One-time discovery publication with state tracking
+- Command processing with ack/result topics and command registry
+- Availability publishing (online/offline with LWT)
+- Status payload tracking with error history
+- JSON publish helpers with optional timestamp injection
+- Service runner for periodic loops with graceful shutdown
 - Validation of HA fields with optional extension lists
 - Configurable logging levels for connection, publish, and discovery
 
 ## Installation
 
-- Requires Python 3.11+
+- Requires Python 3.10+
 - pip: `pip install ha-mqtt-publisher`
 
 ## Configuration
@@ -131,6 +137,28 @@ publisher.publish(
 publisher.disconnect()
 ```
 
+The publisher also supports context manager usage:
+
+```python
+with MQTTPublisher(broker_url="localhost", broker_port=1883) as pub:
+    pub.publish("topic", "payload")
+```
+
+### JSON publish helpers
+
+```python
+from ha_mqtt_publisher.json_publish import publish_json, publish_many
+
+# Publish a dict as JSON with optional automatic timestamp
+publish_json(publisher, "sensors/reading", {"temperature": 22.5}, ensure_ts_field="ts")
+
+# Batch publish multiple messages
+publish_many(publisher, [
+    ("sensors/temp", {"value": 22.5}, 1, True),
+    ("sensors/humidity", {"value": 65}, 1, True),
+])
+```
+
 ### Home Assistant Discovery
 
 Declare a device and entities, then publish discovery configs. Use one-time mode to avoid re-publishing.
@@ -233,10 +261,125 @@ publish_device_bundle(
 )
 ```
 
+### Availability publishing
+
+```python
+from ha_mqtt_publisher.availability import AvailabilityPublisher
+
+avail = AvailabilityPublisher(publisher, "myapp/availability")
+avail.online()   # publishes "online" (retained)
+# ... do work ...
+avail.offline()  # publishes "offline" (retained)
+```
+
+Combine with Last Will for automatic offline on disconnect:
+
+```python
+publisher = MQTTPublisher(
+    broker_url="localhost",
+    last_will={"topic": "myapp/availability", "payload": "offline", "qos": 1, "retain": True},
+)
+```
+
+### Command processing
+
+```python
+from ha_mqtt_publisher.commands import CommandProcessor
+
+cp = CommandProcessor(
+    client=publisher,
+    ack_topic="myapp/cmd/ack",
+    result_topic="myapp/cmd/result",
+)
+
+def handle_refresh(args):
+    # do work...
+    return ("ok", "refreshed 42 items", {"count": 42})
+
+cp.register("refresh", handle_refresh, description="Refresh data")
+
+# Process incoming command (from MQTT subscription callback)
+cp.handle_raw('{"command": "refresh", "args": {}}')
+
+# Publish command registry for HA button discovery
+cp.publish_registry("myapp/cmd/registry")
+```
+
+### Status tracking
+
+```python
+from ha_mqtt_publisher.status import StatusPayload
+from ha_mqtt_publisher.json_publish import publish_json
+
+status = StatusPayload(status="ok", event_count=0)
+status.mark_run()
+status.add_error("api_error", "Upstream API returned 503")
+status.cap_errors(max_items=20)
+
+publish_json(publisher, "myapp/status", status.as_dict(), retain=True)
+```
+
+### Topic conventions
+
+```python
+from ha_mqtt_publisher.topic_map import TopicMap
+
+topics = TopicMap(base="myapp")
+topics.status        # "myapp/status"
+topics.availability  # "myapp/availability"
+topics.commands      # "myapp/cmd"
+topics.cmd("refresh") # "myapp/cmd/refresh"
+```
+
+### Service runner
+
+```python
+from ha_mqtt_publisher.service_runner import run_service_loop
+
+async def on_tick():
+    # publish sensor data, check commands, etc.
+    pass
+
+run_service_loop(interval_s=60, on_tick=on_tick, availability=avail)
+```
+
 ### One-time publication
 
 - Enabled by passing `one_time_mode=True` to `publish_discovery_configs`.
 - Tracks published topics in `home_assistant.discovery_state_file`.
+
+### Discovery verification (optional self-heal)
+
+If you want the library to verify retained discovery topics exist on the broker and republish any that are missing, enable the verification pass when using one-time mode.
+
+- Config flags:
+  - `home_assistant.ensure_discovery_on_startup`: `true`|`false` (default `false`)
+  - `home_assistant.ensure_discovery_timeout`: float seconds (default `2.0`)
+  - `home_assistant.bundle_only_mode`: `true`|`false` (default `false`). When true, verification checks only the device bundle topic and republishes it if missing.
+
+```python
+from ha_mqtt_publisher.ha_discovery import ensure_discovery
+
+ensure_discovery(
+	config=app_config,
+	publisher=publisher,
+	entities=[temp, status],
+	device=device,
+	timeout=app_config.get("home_assistant.ensure_discovery_timeout", 2.0),
+	one_time_mode=True,
+)
+```
+
+Bundle-only mode
+
+If your HA supports device bundles and you don't want per-entity discovery topics, set:
+
+```yaml
+home_assistant:
+	bundle_only_mode: true
+```
+
+Then a normal call to `publish_discovery_configs` with entities will publish only the bundle and skip per-entity configs.
 
 ## Supported Home Assistant components
 
@@ -275,107 +418,17 @@ publish_device_bundle(
 ## Testing
 
 ```bash
-pytest -q
+make test           # run 269 unit tests
+make ci-check       # lint + test
 ```
-
-Entity-centric verification snippet
-
-```python
-from ha_mqtt_publisher.ha_discovery import ensure_discovery
-
-# Verify per-entity discovery topics; republish any missing
-ensure_discovery(
-	config=app_config,
-	publisher=publisher,
-	entities=[temp, humid, status],
-	device=device,
-	one_time_mode=True,
-)
-```
-
-See also: `examples/entity_verification.py`
-
-Emit device bundle within `publish_discovery_configs`
-
-```python
-publish_discovery_configs(
-	config=app_config,
-	publisher=publisher,
-	entities=[temp, humid],
-	device=device,
-	one_time_mode=True,
-	emit_device_bundle=True,  # bundle first, then per-entity topics
-)
-```
-
-Bundle-only mode
-
-If your HA supports device bundles and you don’t want per-entity discovery topics, set:
-
-```yaml
-home_assistant:
-	bundle_only_mode: true
-```
-
-Then a normal call to `publish_discovery_configs` with entities will publish only the bundle and skip per-entity configs.
-
-### Discovery verification (optional self-heal)
-
-If you want the library to verify retained discovery topics exist on the broker and republish any that are missing, enable the verification pass when using one-time mode.
-
-- Config flags:
-  - `home_assistant.ensure_discovery_on_startup`: `true`\|`false` (default `false`)
-  - `home_assistant.ensure_discovery_timeout`: float seconds (default `2.0`)
-  - `home_assistant.bundle_only_mode`: `true`\|`false` (default `false`). When true, verification checks only the device bundle topic and republishes it if missing.
-
-Lightweight example
-
-```python
-from ha_mqtt_publisher.ha_discovery import ensure_discovery
-
-# Before publish_discovery_configs (optional; publish_discovery_configs will call this automatically
-# when one_time_mode=True and home_assistant.ensure_discovery_on_startup is true)
-ensure_discovery(
-	config=app_config,
-	publisher=publisher,
-	entities=[temp, status],
-	device=device,
-	timeout=app_config.get("home_assistant.ensure_discovery_timeout", 2.0),
-	one_time_mode=True,
-)
-```
-
-Modern HA: bundle-only verification example
-
-If your Home Assistant version supports device bundle configs and you set:
-
-```yaml
-home_assistant:
-	bundle_only_mode: true
-```
-
-You can verify (and republish if missing) just the bundle topic:
-
-```python
-from ha_mqtt_publisher.ha_discovery import ensure_discovery
-
-# Assumes home_assistant.bundle_only_mode: true in your YAML
-ensure_discovery(
-		config=app_config,
-		publisher=publisher,
-		entities=[temp, humid],  # included in the bundle
-		device=device,
-		device_id="living_room_bridge",  # optional; defaults to first device identifier
-		one_time_mode=True,
-)
-```
-
-See also: `examples/bundle_only_verification.py`
 
 ## Development
 
-- Install dev dependencies: `pip install -e .[dev]`
-- Lint and format: `ruff check . && ruff format .`
+```bash
+poetry install      # install dependencies
+make fix            # lint + format
+make install-hooks  # install pre-commit hooks
+```
 
 ## Troubleshooting
 
@@ -393,4 +446,3 @@ Issues and pull requests are welcome in the GitHub repository.
 ## Support
 
 Open a GitHub issue for questions and problems.
-# Pre-commit setup complete

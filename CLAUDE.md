@@ -12,7 +12,7 @@ Published to PyPI as `ha-mqtt-publisher`. Used by `twickenham_events`.
 
 ## Toolchain
 
-Python 3.11+, Poetry, ruff, pytest, pre-commit
+Python 3.10+, Poetry, ruff, pytest, pre-commit
 
 ## Key commands
 
