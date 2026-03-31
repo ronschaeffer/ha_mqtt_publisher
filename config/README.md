@@ -101,7 +101,7 @@ All configuration files support environment variable substitution using `${VARIA
 
 The package uses a hierarchical configuration approach:
 
-1. **Shared environment** (`/home/ron/projects/.env`) - Common settings across projects
+1. **Shared environment** (parent workspace `.env`) - Common settings across projects
 2. **Project environment** (`.env`) - Project-specific overrides
 3. **Configuration file** (`config/config.yaml`) - Structured settings
 4. **System environment** - Highest priority overrides

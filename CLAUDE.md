@@ -40,7 +40,7 @@ Via GitHub Actions on version tag push. See `.github/workflows/release.yml`.
 
 ## Testing
 
-Integration harness: `/root/dev/python/mqtt_test_harness` (`mqtt_test_harness` package).
+Integration harness: `mqtt_test_harness` package (sibling repo).
 Subscribe with `MQTTHarness`, publish via `MQTTPublisher`, assert with `collect()`.
 
 ```python

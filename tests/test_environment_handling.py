@@ -38,7 +38,7 @@ class TestMqttPublisherEnvironmentLoading:
                     )
                     if path_obj:
                         path_str = str(path_obj)
-                        if "/home/ron/projects/.env" in path_str:
+                        if "/path/to/workspace/.env" in path_str:
                             return True
                         elif "/mqtt_publisher/.env" in path_str:
                             return True
@@ -78,7 +78,7 @@ class TestMqttPublisherEnvironmentLoading:
         # Set up environment variables
         os.environ.update(
             {
-                "MQTT_BROKER_URL": "10.10.10.21",
+                "MQTT_BROKER_URL": "mqtt.example.com",
                 "MQTT_PORT": "8883",
                 "MQTT_USERNAME": "mqtt_pub_user",
                 "MQTT_PASSWORD": "mqtt_pub_pass",
@@ -136,7 +136,7 @@ class TestMqttPublisherEnvironmentLoading:
         config = MockConfig("/fake/config.yaml")
 
         # Verify MQTT configuration
-        assert config.get("mqtt.broker_url") == "10.10.10.21"
+        assert config.get("mqtt.broker_url") == "mqtt.example.com"
         assert config.get("mqtt.broker_port") == "8883"
         assert config.get("mqtt.client_id") == "mqtt_publisher_example"
         assert config.get("mqtt.auth.username") == "mqtt_pub_user"
@@ -162,8 +162,8 @@ class TestMqttPublisherEnvironmentLoading:
                     mock_load_dotenv.return_value = True
 
                     # Simulate the environment loading with print statements
-                    parent_env_path = "/home/ron/projects/.env"
-                    project_env_path = "/home/ron/projects/mqtt_publisher/.env"
+                    parent_env_path = "/path/to/workspace/.env"
+                    project_env_path = "/path/to/workspace/mqtt_publisher/.env"
 
                     if mock_exists(Path(parent_env_path)):
                         print(f"✅ Loaded shared environment from: {parent_env_path}")
@@ -201,7 +201,7 @@ class TestMqttPublisherEnvironmentLoading:
         # Set up environment
         os.environ.update(
             {
-                "MQTT_BROKER_URL": "10.10.10.21",
+                "MQTT_BROKER_URL": "mqtt.example.com",
                 "MQTT_PORT": "8883",
                 "MQTT_USERNAME": "test_user",
                 "MQTT_PASSWORD": "test_pass",
@@ -243,7 +243,7 @@ class TestMqttPublisherEnvironmentLoading:
         }
 
         # Verify configuration
-        assert mqtt_config["broker_url"] == "10.10.10.21"
+        assert mqtt_config["broker_url"] == "mqtt.example.com"
         assert mqtt_config["broker_port"] == 8883
         assert mqtt_config["client_id"] == "mqtt_publisher_example"
         assert mqtt_config["auth"]["username"] == "test_user"
