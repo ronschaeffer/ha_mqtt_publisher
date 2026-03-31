@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # ha_discovery/publisher.py
 
 """
@@ -8,6 +6,8 @@ High-level Home Assistant MQTT Discovery publisher.
 This module provides convenient functions for publishing discovery configurations
 to MQTT brokers for Home Assistant auto-discovery.
 """
+
+from __future__ import annotations
 
 import json
 import time

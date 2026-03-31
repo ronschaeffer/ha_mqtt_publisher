@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Enhanced device discovery with availability and migration support.
 
 This module provides the enhanced publish_device_level_discovery function
@@ -9,6 +7,8 @@ originally developed in twickenham_events, with generic patterns for:
 - Command system patterns
 - Rich entity configuration using proper Entity objects
 """
+
+from __future__ import annotations
 
 import json
 

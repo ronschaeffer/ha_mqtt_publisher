@@ -9,6 +9,7 @@ from typing import Any
 import paho.mqtt.client as mqtt
 
 from ha_mqtt_publisher.mqtt_utils import (
+    reason_code_to_int,
     safe_on_connect,
     safe_on_disconnect,
     safe_on_publish,
@@ -262,7 +263,7 @@ class MQTTPublisher:
                 if protocol_version == mqtt.MQTTv5:
                     cb = mqtt.CallbackAPIVersion.VERSION2
                 else:
-                    cb = mqtt.CallbackAPIVersion.VERSION1
+                    cb = mqtt.CallbackAPIVersion.VERSION2
             except Exception:
                 cb = mqtt.CallbackAPIVersion.VERSION2
 
@@ -330,9 +331,9 @@ class MQTTPublisher:
     def _get_connection_error_message(self, error_code) -> str:
         """Provide helpful error messages for common connection issues."""
         # Handle both integer (v1) and ReasonCode (v2) formats
-        error_code_int = (
-            int(error_code) if hasattr(error_code, "__int__") else error_code
-        )
+        error_code_int = reason_code_to_int(error_code)
+        if error_code_int is None:
+            error_code_int = error_code
 
         error_messages = {
             0: "Connection successful",
@@ -381,20 +382,16 @@ class MQTTPublisher:
             reason_code = None
             properties = None
 
-        # Accept multiple forms of success: int-like 0, ReasonCode objects that
-        # cast to 0, or missing reason_code accompanied by v5 properties (ConnAck).
+        # Accept multiple forms of success: int-like 0, ReasonCode objects with
+        # value 0, or missing reason_code accompanied by v5 properties (ConnAck).
         success = False
         try:
             if reason_code is None:
                 # If properties present (MQTTv5 ConnAck properties) assume success
                 success = properties is not None
             else:
-                # Try numeric conversion where possible
-                success = (
-                    int(reason_code) == 0
-                    if hasattr(reason_code, "__int__")
-                    else reason_code == 0
-                )
+                rc_int = reason_code_to_int(reason_code)
+                success = rc_int == 0 if rc_int is not None else reason_code == 0
         except Exception:
             success = False
 
@@ -432,14 +429,9 @@ class MQTTPublisher:
             properties = None
 
         # Best-effort numeric reason code for uniform handling
-        try:
-            rc_int = (
-                int(reason_code) if hasattr(reason_code, "__int__") else reason_code
-            )
-        except Exception:
-            rc_int = reason_code
+        rc_int = reason_code_to_int(reason_code)
 
-        if rc_int != 0:
+        if rc_int is not None and rc_int != 0:
             # Extract useful properties where available to aid debugging
             prop_repr = None
             try:

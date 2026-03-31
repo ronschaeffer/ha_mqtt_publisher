@@ -53,7 +53,7 @@ def test_publish_device_config_with_explicit_device_id(config_default):
     ok = publish_device_config(config_default, pub, device, device_id="explicit_id")
 
     assert ok is True
-    topic, payload, retain = pub.calls[0]
+    topic, payload, _retain = pub.calls[0]
     assert topic == "homeassistant/device/explicit_id/config"
     assert json.loads(payload)["identifiers"] == ["dev123"]
 

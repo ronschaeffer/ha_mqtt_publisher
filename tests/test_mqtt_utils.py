@@ -14,7 +14,8 @@ def test_extract_reason_code_from_int_like_object():
         def __int__(self):
             return 7
 
-    assert mqtt_utils.extract_reason_code(R()) == 7
+    rc = mqtt_utils.extract_reason_code(R())
+    assert mqtt_utils.reason_code_to_int(rc) == 7
 
 
 def test_extract_reason_code_from_kwargs():
@@ -73,5 +74,39 @@ def test_safe_on_connect_decorator_with_extra_args():
 
     props = DummyProps()
     on_connect("c", "u", "foo", Reason(), props)
-    assert called["rc"] == 5
+    assert mqtt_utils.reason_code_to_int(called["rc"]) == 5
     assert called["properties"] is props
+
+
+def test_reason_code_to_int_with_int():
+    assert mqtt_utils.reason_code_to_int(0) == 0
+    assert mqtt_utils.reason_code_to_int(5) == 5
+    assert mqtt_utils.reason_code_to_int(None) is None
+
+
+def test_reason_code_to_int_with_value_attr():
+    """Simulates paho 2.x ReasonCode which has .value and .getName."""
+
+    class FakeReasonCode:
+        def __init__(self, val):
+            self.value = val
+
+        def getName(self):
+            return "Success" if self.value == 0 else "Error"
+
+    assert mqtt_utils.reason_code_to_int(FakeReasonCode(0)) == 0
+    assert mqtt_utils.reason_code_to_int(FakeReasonCode(5)) == 5
+
+
+def test_extract_reason_code_with_paho_like_reason_code():
+    """extract_reason_code should find paho-style ReasonCode objects."""
+
+    class FakeReasonCode:
+        def __init__(self, val):
+            self.value = val
+
+        def getName(self):
+            return "Normal disconnection"
+
+    rc = FakeReasonCode(0)
+    assert mqtt_utils.extract_reason_code("flags", rc, "props") is rc

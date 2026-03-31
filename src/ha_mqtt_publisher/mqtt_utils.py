@@ -7,22 +7,45 @@ so they are safe for library use.
 from typing import Any
 
 
+def _is_reason_code(obj: Any) -> bool:
+    """Check if *obj* is a paho ReasonCode (or int-like reason code)."""
+    if isinstance(obj, int) and not isinstance(obj, bool):
+        return True
+    # paho 2.x ReasonCode has .value and .getName but no __int__
+    if hasattr(obj, "value") and hasattr(obj, "getName"):
+        return True
+    if hasattr(obj, "__int__"):
+        return True
+    return False
+
+
+def reason_code_to_int(rc: Any) -> int | None:
+    """Convert a reason code (int or paho ReasonCode) to int, or None."""
+    if rc is None:
+        return None
+    if isinstance(rc, int):
+        return rc
+    if hasattr(rc, "value"):
+        return rc.value
+    if hasattr(rc, "__int__"):
+        try:
+            return int(rc)
+        except Exception:
+            pass
+    return None
+
+
 def extract_reason_code(*args: tuple[Any, ...], **kwargs: dict) -> Any | None:
     """Extract a likely reason_code from positional args or kwargs.
 
     Best-effort rules:
-    - Search positional args from right-to-left for an int-like value.
+    - Search positional args from right-to-left for a ReasonCode or int-like value.
     - Fall back to kwargs 'reason_code' or 'rc' if present.
     - Return None if nothing found.
     """
     for a in reversed(args):
-        if isinstance(a, int) and not isinstance(a, bool):
+        if _is_reason_code(a):
             return a
-        if hasattr(a, "__int__"):
-            try:
-                return int(a)
-            except Exception:
-                pass
 
     for key in ("reason_code", "rc"):
         if key in kwargs and kwargs[key] is not None:
