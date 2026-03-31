@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -34,7 +34,7 @@ class StatusPayload:
         return d
 
     def mark_run(self) -> None:
-        now = datetime.now(tz=UTC)
+        now = datetime.now(tz=timezone.utc)
         self.last_run_ts = int(now.timestamp())
         self.last_run_iso = now.isoformat()
 

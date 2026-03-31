@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Enhanced device discovery with availability and migration support.
 
 This module provides the enhanced publish_device_level_discovery function

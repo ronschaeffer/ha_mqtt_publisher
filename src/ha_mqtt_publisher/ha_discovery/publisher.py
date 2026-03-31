@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # ha_discovery/publisher.py
 
 """

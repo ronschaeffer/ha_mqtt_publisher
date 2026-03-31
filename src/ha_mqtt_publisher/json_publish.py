@@ -58,6 +58,6 @@ def publish_many(
 
 
 def _iso_now() -> str:
-    from datetime import UTC, datetime
+    from datetime import datetime, timezone
 
-    return datetime.now(UTC).isoformat()
+    return datetime.now(timezone.utc).isoformat()

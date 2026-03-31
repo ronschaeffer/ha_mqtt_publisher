@@ -1,11 +1,11 @@
 [project]
 name = "ha-mqtt-publisher"
-version = "0.3.4"
+version = "0.3.5"
 description = "An MQTT publisher package"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "ronschaeffer" }]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 keywords = ["mqtt", "publisher", "iot"]
 dependencies = [
     "paho-mqtt>=2.1.0",
@@ -54,7 +54,7 @@ testpaths = [
 
 # Ruff configuration
 [tool.ruff]
-target-version = "py311"
+target-version = "py310"
 line-length = 88
 required-version = ">=0.12.0"
 

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -12,7 +13,7 @@ class TestBasicAutomation:
     def test_version_sync_script_runs(self):
         """Test that version sync script executes successfully."""
         result = subprocess.run(
-            ["python", "scripts/sync_versions.py"],
+            [sys.executable, "scripts/sync_versions.py"],
             capture_output=True,
             text=True,
             cwd=Path.cwd(),
@@ -87,8 +88,8 @@ class TestBasicAutomation:
             import importlib.util
 
             for example_file in [
-                "enhanced_features_example.py",
-                "ha_discovery_complete_example.py",
+                "device_bundle_discovery.py",
+                "message_handler_example.py",
             ]:
                 spec = importlib.util.spec_from_file_location(
                     example_file[:-3], examples_dir / example_file
@@ -109,7 +110,6 @@ class TestBasicAutomation:
         yaml_files = [
             "config/config.yaml.example",
             "config/config_ha_discovery.yaml.example",
-            "config/ha_mqtt_discovery.yaml.example",
         ]
 
         for yaml_file in yaml_files:
@@ -120,18 +120,6 @@ class TestBasicAutomation:
                     yaml.safe_load(content)
                 except yaml.YAMLError as e:
                     pytest.fail(f"Invalid YAML in {yaml_file}: {e}")
-
-    def test_json_template_is_valid(self):
-        """Test that JSON template is valid."""
-        import json
-
-        json_file = Path("config/ha_mqtt_discovery.json.example")
-        if json_file.exists():
-            content = json_file.read_text()
-            try:
-                json.loads(content)
-            except json.JSONDecodeError as e:
-                pytest.fail(f"Invalid JSON in {json_file}: {e}")
 
 
 if __name__ == "__main__":

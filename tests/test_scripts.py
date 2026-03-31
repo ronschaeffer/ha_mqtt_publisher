@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -12,7 +13,7 @@ class TestAutomationScripts:
     def test_sync_versions_dry_run(self):
         """Test version sync script in dry run mode."""
         result = subprocess.run(
-            ["python", "scripts/sync_versions.py"],
+            [sys.executable, "scripts/sync_versions.py"],
             capture_output=True,
             text=True,
         )
@@ -89,7 +90,7 @@ class TestAutomationScripts:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             result = subprocess.run(
-                ["python", str(Path("scripts/sync_versions.py").absolute())],
+                [sys.executable, str(Path("scripts/sync_versions.py").absolute())],
                 capture_output=True,
                 text=True,
                 cwd=temp_dir,
