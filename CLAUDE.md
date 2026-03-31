@@ -38,6 +38,19 @@ config/                  example config files
 
 Via GitHub Actions on version tag push. See `.github/workflows/release.yml`.
 
+## Testing
+
+Integration harness: `/root/dev/python/mqtt_test_harness` (`mqtt_test_harness` package).
+Subscribe with `MQTTHarness`, publish via `MQTTPublisher`, assert with `collect()`.
+
+```python
+from mqtt_test_harness import MQTTHarness
+
+async with MQTTHarness() as h:
+    # publish via ha_mqtt_publisher, then:
+    msgs = await h.collect("topic", count=1, timeout=5.0)
+```
+
 ## Coding conventions
 
 - Line length: 88, quote style: double
