@@ -1,6 +1,6 @@
 [project]
 name = "ha-mqtt-publisher"
-version = "0.3.6"
+version = "0.4.0"
 description = "An MQTT publisher package"
 readme = "README.md"
 license = { text = "MIT" }
@@ -19,6 +19,9 @@ Homepage = "https://github.com/ronschaeffer/ha_mqtt_publisher"
 Repository = "https://github.com/ronschaeffer/ha_mqtt_publisher"
 
 [project.optional-dependencies]
+fastapi = [
+    "fastapi>=0.100.0",
+]
 dev = [
     "pytest>=8.3.4",
     "pytest-mock>=3.10.0",
