@@ -39,9 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     hb = HeartbeatFile(args.heartbeat, args.max_age)
     age = hb.age_seconds()
     if age is None:
-        print(
-            f"FAIL: heartbeat {args.heartbeat} does not exist", file=sys.stderr
-        )
+        print(f"FAIL: heartbeat {args.heartbeat} does not exist", file=sys.stderr)
         return 1
     if age > args.max_age:
         print(

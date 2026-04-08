@@ -31,7 +31,7 @@ from dataclasses import dataclass
 import os
 from pathlib import Path
 import time
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .publisher import MQTTPublisher
@@ -42,17 +42,17 @@ class HealthState:
     """Snapshot of MQTT publisher health state."""
 
     connected: bool = False
-    last_connect_at: Optional[float] = None
-    last_disconnect_at: Optional[float] = None
-    last_publish_success_at: Optional[float] = None
-    last_publish_failure_at: Optional[float] = None
-    last_failure_reason: Optional[str] = None
+    last_connect_at: float | None = None
+    last_disconnect_at: float | None = None
+    last_publish_success_at: float | None = None
+    last_publish_failure_at: float | None = None
+    last_failure_reason: str | None = None
     publish_success_count: int = 0
     publish_failure_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         now = time.time()
-        last_success_age: Optional[float] = None
+        last_success_age: float | None = None
         if self.last_publish_success_at is not None:
             last_success_age = now - self.last_publish_success_at
         return {
@@ -92,7 +92,7 @@ class HealthTracker:
     def __init__(self, max_publish_age_seconds: float = 300.0) -> None:
         self.max_publish_age_seconds = max_publish_age_seconds
         self.state = HealthState()
-        self._publisher: Optional[MQTTPublisher] = None
+        self._publisher: MQTTPublisher | None = None
 
     def attach(self, publisher: MQTTPublisher) -> HealthTracker:
         """Instrument an MQTTPublisher to update this tracker on every event.
@@ -123,9 +123,7 @@ class HealthTracker:
             tracker.state.last_disconnect_at = time.time()
             return result
 
-        def wrapped_publish(
-            topic, payload, qos=None, retain=None, properties=None
-        ):
+        def wrapped_publish(topic, payload, qos=None, retain=None, properties=None):
             ok = orig_publish(
                 topic, payload, qos=qos, retain=retain, properties=properties
             )
@@ -152,9 +150,7 @@ class HealthTracker:
             from .mqtt_utils import safe_on_connect, safe_on_disconnect
 
             publisher.client.on_connect = safe_on_connect(wrapped_on_connect)
-            publisher.client.on_disconnect = safe_on_disconnect(
-                wrapped_on_disconnect
-            )
+            publisher.client.on_disconnect = safe_on_disconnect(wrapped_on_disconnect)
         except Exception:  # pragma: no cover - defensive
             publisher.client.on_connect = wrapped_on_connect
             publisher.client.on_disconnect = wrapped_on_disconnect
@@ -188,9 +184,7 @@ class HeartbeatFile:
     verify the heartbeat is recent enough.
     """
 
-    def __init__(
-        self, path: str | os.PathLike[str], max_age_seconds: float
-    ) -> None:
+    def __init__(self, path: str | os.PathLike[str], max_age_seconds: float) -> None:
         self.path = Path(path)
         self.max_age_seconds = max_age_seconds
 
@@ -199,7 +193,7 @@ class HeartbeatFile:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.touch()
 
-    def age_seconds(self) -> Optional[float]:
+    def age_seconds(self) -> float | None:
         """Age of the heartbeat in seconds, or None if it does not exist."""
         try:
             return time.time() - self.path.stat().st_mtime

@@ -1,11 +1,10 @@
 """An MQTT publisher package with Home Assistant Discovery support"""
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 __author__ = "ronschaeffer"
 
 # Import main components for easy access (sorted)
 from .availability import AvailabilityPublisher, install_signal_handlers
-from .health import HealthState, HealthTracker, HeartbeatFile, make_fastapi_router
 from .commands import CommandProcessor, Executor
 from .config import Config, MQTTConfig
 from .ha_discovery import (
@@ -15,6 +14,7 @@ from .ha_discovery import (
     StatusSensor,
     publish_discovery_configs,
 )
+from .health import HealthState, HealthTracker, HeartbeatFile, make_fastapi_router
 from .json_publish import publish_json, publish_many
 from .publisher import MQTTPublisher
 from .service_runner import run_service_loop, run_service_once

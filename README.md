@@ -23,11 +23,13 @@ A Python MQTT publishing library with Home Assistant MQTT Discovery support.
 - Service runner for periodic loops with graceful shutdown
 - Validation of HA fields with optional extension lists
 - Configurable logging levels for connection, publish, and discovery
+- **Health & liveness primitives** (v0.4.0+) — `HealthTracker`, `HeartbeatFile`, FastAPI router, and a healthcheck CLI for exposing real MQTT-broker liveness to Docker `HEALTHCHECK`, Kubernetes probes, and monitoring systems
 
 ## Installation
 
 - Requires Python 3.10+
 - pip: `pip install ha-mqtt-publisher`
+- For the FastAPI health router: `pip install "ha-mqtt-publisher[fastapi]"`
 
 ## Configuration
 
@@ -414,6 +416,90 @@ Then a normal call to `publish_discovery_configs` with entities will publish onl
 
 - Validation covers `entity_category`, `availability_mode`, sensor `state_class`, and `device_class`.
 - Additional allowed values can be provided via `home_assistant.extra_allowed`.
+
+## Health & Liveness
+
+`ha_mqtt_publisher` provides three primitives for exposing real MQTT-broker liveness to external healthchecks. These exist because Docker `HEALTHCHECK` probes that only verify a local HTTP `/health` endpoint mark a container "healthy" even when its MQTT publisher has been silently failing for hours.
+
+### `HealthTracker` — for long-running services
+
+Wraps an `MQTTPublisher` instance and tracks its connection state, publish success/failure counts, and last-success timestamp. A publisher is considered `is_healthy` when it is currently connected AND either has not yet published anything OR published successfully within `max_publish_age_seconds`.
+
+```python
+from ha_mqtt_publisher import HealthTracker, MQTTPublisher, make_fastapi_router
+from fastapi import FastAPI
+
+publisher = MQTTPublisher(broker_url="mqtt.example.com", broker_port=1883, ...)
+
+# attach() monkey-patches _on_connect/_on_disconnect/publish on the publisher
+# so every connection and publish event updates the tracker automatically.
+tracker = HealthTracker(max_publish_age_seconds=300)
+tracker.attach(publisher)
+publisher.connect()
+
+# Mount the router on your FastAPI app to expose /health and /health/mqtt
+app = FastAPI()
+app.include_router(make_fastapi_router(tracker))
+```
+
+`make_fastapi_router(tracker)` exposes:
+
+- `GET /health` → always returns `200 {"status": "ok"}` (process liveness)
+- `GET /health/mqtt` → `200` with the full status dict if `tracker.is_healthy`, or `503` if not
+
+Then point your Docker `HEALTHCHECK` at `/health/mqtt` and a 503 from a real broker outage will actually mark the container unhealthy:
+
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3     CMD python -c "import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8080/health/mqtt',timeout=3); sys.exit(0 if r.status==200 else 1)" || exit 1
+```
+
+For services that don't go through `HealthTracker.attach()` (e.g. those using raw `paho.mqtt.Client` directly), you can populate the tracker state manually from your own callbacks:
+
+```python
+import time
+
+tracker = HealthTracker(max_publish_age_seconds=300)
+
+def on_connect(client, userdata, flags, rc, *args):
+    if rc == 0:
+        tracker.state.connected = True
+        tracker.state.last_connect_at = time.time()
+
+def on_disconnect(client, userdata, *args):
+    tracker.state.connected = False
+    tracker.state.last_disconnect_at = time.time()
+
+# After every successful publish:
+tracker.state.last_publish_success_at = time.time()
+tracker.state.publish_success_count += 1
+```
+
+### `HeartbeatFile` — for cron-style services
+
+For services that have no long-running process (cron jobs, periodic scrapers), `HeartbeatFile` provides a filesystem-based liveness signal. The job calls `touch()` after every successful publish; a separate healthcheck process verifies the file is recent enough.
+
+```python
+from ha_mqtt_publisher import HeartbeatFile
+
+# In the publishing job, after a successful MQTT publish:
+HeartbeatFile("/var/run/myapp/.heartbeat", max_age_seconds=90000).touch()
+```
+
+Then use the bundled CLI in your Docker `HEALTHCHECK`:
+
+```dockerfile
+HEALTHCHECK --interval=300s --timeout=10s --start-period=120s --retries=2     CMD python -m ha_mqtt_publisher.healthcheck_cli         --heartbeat /var/run/myapp/.heartbeat         --max-age 90000 || exit 1
+```
+
+The CLI exits `0` if the heartbeat exists and is younger than `--max-age` seconds, `1` otherwise. Pick `--max-age` to be slightly longer than your job's interval — e.g. for a daily cron, `90000` (~25 hours) absorbs schedule jitter without masking a genuinely missed run.
+
+### When to use which
+
+| Service shape | Primitive | Healthcheck |
+|---|---|---|
+| Long-running, has FastAPI / HTTP server | `HealthTracker` + `make_fastapi_router` | Probe `/health/mqtt` |
+| Long-running, no HTTP (just paho client) | `HealthTracker` populated manually | Custom HTTP server, or exit non-zero from a Python one-liner |
+| Cron / periodic / one-shot | `HeartbeatFile.touch()` after publish | `python -m ha_mqtt_publisher.healthcheck_cli` |
 
 ## Testing
 
