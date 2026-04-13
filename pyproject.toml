@@ -10,7 +10,7 @@ keywords = ["mqtt", "publisher", "iot"]
 dependencies = [
     "paho-mqtt>=2.1.0",
     "pyyaml>=6.0",
-    "python-dotenv>=1.1.1",
+    "python-dotenv>=1.2.2",
     "typing-extensions>=4.7.0",
 ]
 
