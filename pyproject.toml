@@ -42,7 +42,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.automation.dependencies]
-commitizen = { version = ">=3,<5", optional = true }
+commitizen = { version = ">=4.13.10,<5", optional = true }
 
 [tool.poetry.group.ai.dependencies]
 google-generativeai = "^0.8.0"
