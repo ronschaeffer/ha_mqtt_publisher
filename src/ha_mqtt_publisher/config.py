@@ -26,6 +26,8 @@ class MQTTConfig:
             default_qos: Default QoS level for publish operations (default: 0)
             default_retain: Default retain flag for publish operations (default: False)
             logging_config: Enhanced logging configuration dictionary
+            background_reconnect: Keep retrying in the background after
+                max_retries fails (publisher default: True)
 
         Returns:
             Complete MQTT configuration dictionary
@@ -95,6 +97,18 @@ class MQTTConfig:
         if logging_config:
             config["logging_config"] = logging_config
 
+        # Background reconnect (only set when given, so the publisher default applies)
+        background_reconnect = kwargs.get("background_reconnect")
+        if background_reconnect is not None:
+            if isinstance(background_reconnect, str):
+                background_reconnect = background_reconnect.lower() in (
+                    "true",
+                    "1",
+                    "yes",
+                    "on",
+                )
+            config["background_reconnect"] = bool(background_reconnect)
+
         # Validate required fields
         if not config["broker_url"]:
             raise ValueError("broker_url is required")
@@ -145,6 +159,7 @@ class MQTTConfig:
             default_qos=mqtt_section.get("default_qos"),
             default_retain=mqtt_section.get("default_retain"),
             logging_config=mqtt_section.get("logging_config"),
+            background_reconnect=mqtt_section.get("background_reconnect"),
         )
 
     @staticmethod
@@ -175,6 +190,7 @@ class MQTTConfig:
             default_qos=_get("default_qos"),
             default_retain=_get("default_retain"),
             logging_config=_get("logging_config"),
+            background_reconnect=_get("background_reconnect"),
         )
 
     @staticmethod
@@ -193,6 +209,8 @@ class MQTTConfig:
             "default_retain": config.get("default_retain"),
             "logging_config": config.get("logging_config"),
         }
+        if "background_reconnect" in config:
+            out["background_reconnect"] = config["background_reconnect"]
         return out
 
     @staticmethod

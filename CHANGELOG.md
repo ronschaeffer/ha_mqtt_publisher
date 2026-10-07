@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-10-07
+
+### Changed
+
+- `MQTTPublisher.connect()` no longer gives up for good when `max_retries`
+  attempts fail. It now hands the connection to paho's background loop
+  (`connect_async` + `loop_start`, 1–60 s backoff), which keeps retrying until
+  the broker accepts; `connect()` still returns `False`. This fixes services
+  that start before the broker after a host reboot and then never connect
+  (seen with heathrow_noise after a SERVER reboot on 2026-10-07).
+  Opt out with `background_reconnect=False` / `mqtt.background_reconnect: false`.
+- Calling `connect()` again while a background attempt is in progress waits
+  briefly for it instead of opening a second connection.
+- `disconnect()` stops a background retry loop that never connected, and a
+  failed context-manager `with` no longer leaves one running.
+
+### Added
+
+- `background_reconnect` option on `MQTTPublisher` and `MQTTConfig`
+  (`build_config`, `from_dict`, `from_mapping`, `to_publisher_kwargs`).
+
 ## [0.4.1] — 2026-04-08
 
 ### Added

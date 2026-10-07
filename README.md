@@ -52,6 +52,7 @@ mqtt:
 		client_cert: "${MQTT_TLS_CLIENT_CERT}"
 		client_key: "${MQTT_TLS_CLIENT_KEY}"
 	max_retries: "${MQTT_MAX_RETRIES}"
+	background_reconnect: true             # keep retrying after max_retries (default true)
 	default_qos: "${MQTT_DEFAULT_QOS}"
 	default_retain: "${MQTT_DEFAULT_RETAIN}"
 
@@ -382,6 +383,22 @@ home_assistant:
 ```
 
 Then a normal call to `publish_discovery_configs` with entities will publish only the bundle and skip per-entity configs.
+
+### Startup when the broker isn't up yet
+
+`connect()` makes `max_retries` quick attempts. If they all fail (for example
+the service started before the broker after a host reboot), the publisher hands
+the connection to paho's background loop, which keeps retrying with a 1–60 s
+backoff until the broker accepts. `connect()` still returns `False`;
+`HealthTracker` and any `on_connect` hook see the connection when it arrives,
+and calling `connect()` again just waits briefly for that background attempt.
+Re-publish discovery/availability from an `on_connect` hook if your service
+publishes them only once at startup.
+
+Set `background_reconnect: false` (or `MQTTPublisher(..., background_reconnect=False)`)
+to keep the old give-up behaviour. Using the publisher as a context manager
+never leaves a background loop behind: a failed `with` stops it and raises
+`ConnectionError`.
 
 ## Supported Home Assistant components
 

@@ -232,7 +232,8 @@ class TestPublisherAdditionalCoverage:
             # Should timeout and log warning
             assert result is False
             mock_warning.assert_called()
-            assert "Connection timeout" in mock_warning.call_args[0][0]
+            warnings = [c.args[0] for c in mock_warning.call_args_list]
+            assert any("Connection timeout" in w for w in warnings)
 
     def test_connect_with_exception_and_retries(self):
         """Test connection with exceptions and retry logic."""

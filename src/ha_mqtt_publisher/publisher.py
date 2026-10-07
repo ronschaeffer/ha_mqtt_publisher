@@ -35,6 +35,11 @@ class MQTTPublisher:
         auth: Authentication credentials
         tls: TLS configuration settings
         max_retries: Maximum connection attempts
+        background_reconnect: If True (default), when ``connect()`` exhausts
+            ``max_retries`` it hands the connection to paho's background loop,
+            which keeps retrying (1-60 s backoff) until the broker accepts.
+            ``connect()`` still returns False; ``_on_connect`` fires when the
+            broker comes up. Set False for the old give-up behaviour.
         last_will: Last Will and Testament settings
         config: Complete configuration dictionary (alternative to individual params)
         protocol: MQTT protocol version ('MQTTv31', 'MQTTv311', 'MQTTv5')
@@ -195,6 +200,7 @@ class MQTTPublisher:
         default_qos: int = 0,  # New: Default QoS for publish operations
         default_retain: bool = False,  # New: Default retain flag for publish operations
         logging_config: dict | None = None,  # New: Enhanced logging configuration
+        background_reconnect: bool = True,
     ):
         # Handle config dict parameter
         if config:
@@ -211,6 +217,9 @@ class MQTTPublisher:
             self.default_qos = config.get("default_qos", default_qos)
             self.default_retain = config.get("default_retain", default_retain)
             self.logging_config = config.get("logging_config", logging_config or {})
+            background_reconnect = config.get(
+                "background_reconnect", background_reconnect
+            )
         else:
             # Use individual parameters (existing behavior)
             self.broker_url = broker_url
@@ -226,6 +235,8 @@ class MQTTPublisher:
         self.auth = auth or {}
         self.tls = tls
         self.max_retries = max_retries
+        self.background_reconnect = bool(background_reconnect)
+        self._background_reconnect_active = False
         self._connected = False
         self._loop_running = False  # Track background loop state
 
@@ -397,6 +408,11 @@ class MQTTPublisher:
 
         if success:
             self._connected = True
+            if self._background_reconnect_active:
+                self._background_reconnect_active = False
+                self.connection_logger.info(
+                    "Background reconnect succeeded; broker is now reachable"
+                )
             self.connection_logger.info("Connected to MQTT broker")
             return
 
@@ -494,10 +510,20 @@ class MQTTPublisher:
         self.publish_logger.debug(f"Message published with ID: {mid}")
 
     def connect(self) -> bool:
-        """Connect to the MQTT broker with exponential backoff retry logic."""
+        """Connect to the MQTT broker with exponential backoff retry logic.
+
+        Returns True once connected. If ``max_retries`` attempts fail and
+        ``background_reconnect`` is enabled, the paho background loop keeps
+        retrying and this returns False; calling ``connect()`` again while that
+        is in progress just waits briefly for it instead of opening a second
+        connection.
+        """
         # Type assertions for type checker (validation ensures these are not None)
         assert self.broker_url is not None
         assert isinstance(self.broker_port, int)
+
+        if self._background_reconnect_active:
+            return self._wait_for_connection(timeout=5)
 
         retries = 0
         base_delay = 1  # Start with 1 second delay
@@ -566,10 +592,54 @@ class MQTTPublisher:
             "Failed to connect after %d attempts with exponential backoff",
             self.max_retries,
         )
+        if self.background_reconnect:
+            self._start_background_reconnect()
         return False
+
+    def _wait_for_connection(self, timeout: float) -> bool:
+        """Wait up to ``timeout`` seconds for the connection flag."""
+        deadline = time.time() + timeout
+        while not self._connected and time.time() < deadline:
+            time.sleep(0.1)
+        return self._connected
+
+    def _start_background_reconnect(self) -> None:
+        """Hand the connection to paho's network thread, which retries forever.
+
+        paho's ``loop_start()`` thread runs ``loop_forever(retry_first_connection=
+        True)``, so after ``connect_async()`` it keeps trying with the
+        ``reconnect_delay_set`` backoff until the broker accepts, then fires
+        ``on_connect`` as normal.
+        """
+        try:
+            self.client.reconnect_delay_set(min_delay=1, max_delay=60)
+            self.client.connect_async(self.broker_url, self.broker_port, keepalive=60)
+            # MQTT_ERR_INVAL just means the thread is already running (e.g. an
+            # earlier attempt timed out after loop_start); it will pick up the
+            # async connect request.
+            self.client.loop_start()
+            self._loop_running = True
+            self._background_reconnect_active = True
+            self.connection_logger.warning(
+                "Broker %s:%d unreachable; retrying in the background until it "
+                "accepts connections",
+                self.broker_url,
+                self.broker_port,
+            )
+        except Exception as e:
+            self.connection_logger.error(
+                "Could not start background reconnect: %s", e, exc_info=True
+            )
 
     def disconnect(self) -> None:
         """Disconnect from the MQTT broker."""
+        if self._background_reconnect_active and not self._connected:
+            # Stop the background retry loop that never got a connection.
+            self.client.loop_stop()
+            self._loop_running = False
+            self._background_reconnect_active = False
+            self.connection_logger.info("Stopped background reconnect attempts")
+            return
         if self._connected:
             self.client.loop_stop()
             self._loop_running = False
@@ -805,6 +875,8 @@ class MQTTPublisher:
 
     def __enter__(self):
         if not self.connect():
+            # Don't leave a background retry loop behind when raising.
+            self.disconnect()
             raise ConnectionError("Failed to connect to MQTT broker")
         return self
 
